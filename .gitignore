@@ -1,0 +1,9 @@
+# Ignore data files
+data
+
+# Ignore model saved files
+saved_models
+
+run
+__pycache__
+utils/__pycache__
