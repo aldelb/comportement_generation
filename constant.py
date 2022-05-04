@@ -1,6 +1,9 @@
 # --- type params
-model_number = 1
+model_number = 0
 unroll_steps =  False
+layer = ""
+hidden_size = 0
+dropout = 1
 
 # --- Path params
 datasets = ""
@@ -21,7 +24,6 @@ log_interval =  0
 
 # --- Data params
 noise_size = 0
-hidden_size = 0
 pose_size = 0 # nombre de colonne openface pose and gaze angle
 au_size = 0 # nombre de colonne openface AUs
 prosody_size = 0 #nombre de colonne opensmile selectionnées

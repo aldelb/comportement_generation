@@ -3,7 +3,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import constant
+import contextlib
+from torchsummary import summary
+#pip install torchsummary
 
+def write_model_3(file_path, model, D):
+        with open(file_path, "a") as o:
+            with contextlib.redirect_stdout(o):
+                summary(model, (constant.prosody_size, 300), batch_size = constant.batch_size)
+        o.close()
 
 def conv_bn_relu(in_channels, out_channels):
     return nn.Sequential(

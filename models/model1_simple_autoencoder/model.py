@@ -1,9 +1,18 @@
+import contextlib
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import constant
+import contextlib
+from torchsummary import summary
+#pip install torchsummary
 
+def write_model_1(file_path, model, D):
+        with open(file_path, "a") as o:
+            with contextlib.redirect_stdout(o):
+                summary(model, (constant.prosody_size, 300), batch_size = constant.batch_size)
+        o.close()
 
 class AutoEncoder(nn.Module):
     def __init__(self):

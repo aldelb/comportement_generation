@@ -4,6 +4,7 @@ from models.model1_simple_autoencoder.training import train_model_1
 from models.model2_skip_connectivity.training import train_model_2
 from models.model3_two_decoders.training import train_model_3
 from models.model4_GAN_autoencoders.training import train_model_4
+from models.model5_Conditional_GAN.training import train_model_5
 
 from utils.params_utils import create_saved_path, read_params
 
@@ -11,10 +12,11 @@ from utils.params_utils import create_saved_path, read_params
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-params', help='Path to the constant file', default="./params.cfg")
+    parser.add_argument('-id', help='Path to save result and models', default="0")
     args = parser.parse_args()
     read_params(args.params)
 
-    constant.saved_path = create_saved_path(args.params)
+    constant.saved_path = create_saved_path(args.params, args.id)
     
     if(constant.model_number == 1):
         train_model_1()
@@ -24,5 +26,7 @@ if __name__ == "__main__":
         train_model_3()
     elif(constant.model_number == 4):
         train_model_4()
+    elif(constant.model_number == 5):
+        train_model_5()
     else:
         raise Exception("Model ", constant.model_number, " does not exist")

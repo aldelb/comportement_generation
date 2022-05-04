@@ -4,10 +4,11 @@ import os
 from datetime import date
 import configparser
 import constant
-import contextlib
-from torchsummary import summary
-#pip install torchsummary
-
+from models.model1_simple_autoencoder.model import write_model_1
+from models.model2_skip_connectivity.model import write_model_2
+from models.model3_two_decoders.model import write_model_3
+from models.model4_GAN_autoencoders.model import write_model_4
+from models.model5_Conditional_GAN.model import write_model_5
 
 config = configparser.RawConfigParser()
 
@@ -21,6 +22,9 @@ def read_params(file):
         constant.unroll_steps =  config.getboolean('MODEL_TYPE','unroll_steps')
     except:
         constant.unroll_steps =  config.getint('MODEL_TYPE','unroll_steps')
+    constant.layer =  config.get('MODEL_TYPE','layer')
+    constant.hidden_size =  config.getint('MODEL_TYPE','hidden_size') 
+    constant.dropout =  config.getfloat('MODEL_TYPE','dropout') 
 
     datasets = config.get('PATH','datasets')
     constant.datasets = datasets.split(",")
@@ -63,7 +67,7 @@ def read_params(file):
 def get_config_columns(list):
     list_items = config.items(list)
     columns = []
-    for key, column_name in list_items:
+    for _, column_name in list_items:
         columns.append(column_name)
     return columns
 
@@ -82,13 +86,15 @@ def save_params(saved_path, model, D = None):
 
     model_params = {
         "model" : constant.model_number,
-        "unroll_steps" : constant.unroll_steps}
+        "unroll_steps" : constant.unroll_steps,
+        "layer" : constant.layer,
+        "hidden_size" : constant.hidden_size,
+        "dropout" : constant.dropout}
 
     data_params = {
         "log_interval" : constant.log_interval,
         "noise_size" : constant.noise_size,
         "prosody_size" : constant.prosody_size,
-        "hidden_size" : constant.hidden_size,
         "pose_size" : constant.pose_size,
         "au_size" : constant.au_size,
         "column keep in opensmile" : constant.selected_opensmile_columns,
@@ -104,17 +110,21 @@ def save_params(saved_path, model, D = None):
     f.write("-"*10 + "Models" + "-"*10 + "\n")
     f.close()
 
-    with open(file_path, "a") as o:
-        with contextlib.redirect_stdout(o):
-            o.write("-"*10 + "Generateur" + "-"*10 + "\n")
-            summary(model, (constant.prosody_size, 300), batch_size = constant.batch_size)
-            if(constant.model_number in [4]):
-                o.write("-"*10 + "Discriminateur" + "-"*10 + "\n")
-                summary(D, [(constant.pose_size + constant.au_size, 300), (constant.prosody_size, 300)], batch_size = constant.batch_size)
-    o.close()
+    if(constant.model_number == 1):
+        write_model_1(file_path, model, D)
+    elif(constant.model_number == 2):
+        write_model_2(file_path, model, D)
+    elif(constant.model_number == 3):
+        write_model_3(file_path, model, D)
+    elif(constant.model_number == 4):
+        write_model_4(file_path, model, D)
+    elif(constant.model_number == 5):
+        write_model_5(file_path, model, D)
+    else:
+        raise Exception("Model ", constant.model_number, " does not exist")
     
 
-def create_saved_path(config_file):
+def create_saved_path(config_file, id):
     # * Create dir for store models, hist and params
     today = date.today().strftime("%d-%m-%Y")
     saved_path = constant.dir_path + constant.saved_path 
@@ -123,10 +133,13 @@ def create_saved_path(config_file):
         str_dataset += dataset + "_"
 
     dir_path = f"{today}_{str_dataset}"
-    i = 1
-    while(os.path.isdir(saved_path + dir_path + f"{i}")):
-        i = i+1
-    dir_path += f"{i}/"
+    if(id == "0"):
+        i = 1
+        while(os.path.isdir(saved_path + dir_path + f"{i}")):
+            i = i+1
+        dir_path += f"{i}/"
+    else:
+        dir_path += f"{id}/"
     saved_path += dir_path
     os.makedirs(saved_path, exist_ok=True)
     config.set('PATH','model_path', dir_path)

@@ -3,6 +3,18 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import constant
+import contextlib
+from torchsummary import summary
+#pip install torchsummary
+
+def write_model_4(file_path, model, D):
+    with open(file_path, "a") as o:
+        with contextlib.redirect_stdout(o):
+            o.write("-"*10 + "Generateur" + "-"*10 + "\n")
+            summary(model, (constant.prosody_size, 300), batch_size = constant.batch_size)
+            o.write("-"*10 + "Discriminateur" + "-"*10 + "\n")
+            summary(D, [(constant.pose_size + constant.au_size, 300), (constant.prosody_size, 300)], batch_size = constant.batch_size)
+    o.close()
 
 def conv_bn_relu(in_channels, out_channels):
     return nn.Sequential(

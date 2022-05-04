@@ -9,6 +9,7 @@ from models.model1_simple_autoencoder.generating import generate_motion_1
 from models.model2_skip_connectivity.generating import generate_motion_2
 from models.model3_two_decoders.generating import generate_motion_3
 from models.model4_GAN_autoencoders.generating import generate_motion_4
+from models.model5_Conditional_GAN.generating import generate_motion_5
 from utils.model_utils import find_model, load_model
 from utils.params_utils import read_params
 from torch_dataset import TestSet
@@ -23,6 +24,8 @@ def generate_motion(model, input):
         return generate_motion_3(model, input)
     elif(constant.model_number == 4):
         return generate_motion_4(model, input)
+    elif(constant.model_number == 5):
+        return generate_motion_5(model, input)
     else:
         raise Exception("Model ", constant.model_number, " does not exist")
 
