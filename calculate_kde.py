@@ -11,18 +11,20 @@ from utils.model_utils import find_model
 
 from utils.params_utils import read_params
 
+##TODO : une représentation avec PCA
 def calculate_kde(test_set, path_data_out, path_evaluation):
 
     gened_seqs = []
     for file in os.listdir(path_data_out):
         pd_file = pd.read_csv(path_data_out + file)
-        pd_file = pd_file[["gaze_angle_x", "gaze_angle_y", "pose_Rx", "pose_Ry", "pose_Rz", "AU01_r", "AU02_r", "AU04_r", "AU05_r", "AU06_r",
-                         "AU07_r", "AU09_r", "AU10_r", "AU12_r", "AU14_r", "AU15_r", "AU17_r", "AU20_r", "AU23_r", "AU25_r", "AU26_r", "AU45_r"]]
+        pd_file = pd_file[["gaze_0_x", "gaze_0_y", "gaze_0_z", "gaze_1_x", "gaze_1_y", "gaze_1_z", "gaze_angle_x", "gaze_angle_y", "pose_Tx", "pose_Ty", "pose_Tz", "pose_Rx", "pose_Ry",
+                "pose_Rz", "AU01_r", "AU02_r", "AU04_r", "AU05_r", "AU06_r", "AU07_r", "AU09_r", "AU10_r", "AU12_r", "AU14_r", "AU15_r", "AU17_r", "AU20_r", "AU23_r", "AU25_r", "AU26_r", "AU45_r"]]
         gened_seqs.append(pd_file)
     
     gened_frames = np.concatenate(gened_seqs, axis=0)
-    gened_frames[5:]
+    print(gened_frames.shape)
     real_frames = np.concatenate(test_set.Y_final_ori, axis=0)
+    print(real_frames.shape)
 
     means = []
     ses = []
@@ -30,7 +32,7 @@ def calculate_kde(test_set, path_data_out, path_evaluation):
     #for i in range(1, 4):
     i = 1
     print("="*10, "step ", i, "="*10)
-    params = {'bandwidth': np.logspace(-1, 1, 10)} #[ 0.1,  0.16681005,  0.27825594,  0.46415888,  0.77426368, 1.29154967,  2.15443469,  3.59381366,  5.9948425 , 10.        ])
+    params = {'bandwidth':  np.logspace(-2, 0, 5)}
     print("Grid search for bandwith parameter of Kernel Density...")
     grid = GridSearchCV(KernelDensity(kernel='gaussian'), params, cv=3)
     grid.fit(gened_frames)
@@ -45,7 +47,7 @@ def calculate_kde(test_set, path_data_out, path_evaluation):
     print("ses ", ses)
 
     df = pd.DataFrame([*zip(means, ses)], columns=['mean', 'se'])
-    df.to_csv(path_evaluation + "eval"+i+".csv")
+    df.to_csv(path_evaluation + "eval"+ str(i) +".csv")
 
 
 if __name__ == "__main__":

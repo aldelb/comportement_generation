@@ -1,6 +1,6 @@
 from datetime import datetime
 from models.model4_GAN_autoencoders.model import Generator, Discriminator
-from torch_dataset import TrainSet
+from torch_dataset import TestSet, TrainSet
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistLossEpochGAN, plotHistPredEpochGAN
@@ -21,6 +21,33 @@ sns.set_style('whitegrid')
 #to visualize
 #tensorboard --logdir ./runs/autoencoder/ 
 
+def test_loss(G, D, testloader, criterion_pose, criterion_au, criterion_loss):
+    total_loss = 0
+    for iteration ,data in enumerate(testloader,0):
+        input, target = data
+        target_pose = torch.index_select(target, 2, torch.tensor(range(constant.pose_size)))
+        target_au = torch.index_select(target, 2, torch.tensor(range(constant.pose_size, constant.pose_size + constant.au_size)))
+
+        input, target_pose, target_au = Variable(input), Variable(target_pose),  Variable(target_au)
+        input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
+        target_pose = torch.reshape(target_pose, (-1, target_pose.shape[2], target_pose.shape[1]))
+        target_au = torch.reshape(target_au, (-1, target_au.shape[2], target_au.shape[1]))
+
+        output_pose, output_au = G(input.float())
+        gen_y = torch.cat((output_pose, output_au), 1)
+        gen_logit = D(gen_y, input.float())
+        gen_lable = torch.ones_like(gen_logit)
+        
+        loss_pose = criterion_pose(output_pose, target_pose.float())
+        loss_au = criterion_au(output_au, target_au.float())
+        adversarial_loss = criterion_loss(gen_logit, gen_lable)
+        
+        loss = loss_pose + loss_au + adversarial_loss
+        total_loss += loss.data
+
+    total_loss = total_loss/(iteration + 1)
+    return total_loss.cpu().detach().numpy()
+
 def train_model_4():
     print("Launching of model 4 : GAN with auto encoder as generator")
 
@@ -39,6 +66,10 @@ def train_model_4():
     trainset.scaling(True)
     trainloader = torch.utils.data.DataLoader(trainset,batch_size=batch_size,shuffle=True,num_workers=2)
     n_iteration_per_epoch = len(trainloader)
+
+    testset = TestSet()
+    testset.scaling(trainset.x_scaler, trainset.y_scaler)
+    testloader = torch.utils.data.DataLoader(testset,batch_size=batch_size,shuffle=True,num_workers=2)
 
     G = Generator().to(device)
     D = Discriminator().to(device)
@@ -66,14 +97,19 @@ def train_model_4():
     criterionL1 = nn.L1Loss()
 
     d_loss_tab = []
-    d_real_pred = []
-    d_fake_pred = []
+    d_real_pred_tab = []
+    d_fake_pred_tab = []
     g_loss_tab = []
+    t_loss_tab = []
 
     print("Starting Training Loop...")
     for epoch in range(n_epochs):
-        start_epoch = datetime.now()
         print(f"\nStarting epoch {epoch + 1}/{n_epochs}...")
+        start_epoch = datetime.now()
+        current_d_loss = 0
+        current_g_loss = 0
+        current_fake_pred = 0
+        current_real_pred = 0
         for iteration, data in enumerate(trainloader, 0):
             print("*"+f"Starting iteration {iteration + 1}/{n_iteration_per_epoch}...")
             torch.cuda.empty_cache()
@@ -99,9 +135,11 @@ def train_model_4():
             real_logit = D(targets.float(), inputs.float()) #produce a result for each frame (tensor of length 300)
             fake_logit = D(fake_targets, inputs.float())
 
-            d_real_pred_moy = torch.mean(real_logit) #moy because the discriminator made a prediction for each frame
-            d_fake_pred_moy = torch.mean(fake_logit)
+            #discriminator prediction
+            current_real_pred += torch.mean(real_logit) #moy because the discriminator made a prediction for each frame
+            current_fake_pred += torch.mean(fake_logit)
 
+            #discriminator loss
             real_label = torch.ones_like(real_logit) #tensor fill of 1 with the same size as input
             d_real_error = bce_loss(real_logit, real_label) #measures the Binary Cross Entropy between the target and the input probabilities
 
@@ -112,10 +150,7 @@ def train_model_4():
             d_loss.backward() #gradients are computed
             d_opt.step() #updates the parameters, the function can be called once the gradients are computed using e.g. backward().
 
-            d_loss_tab.append(d_loss.cpu().detach().numpy())
-            d_fake_pred.append(d_fake_pred_moy.cpu().detach().numpy())
-            d_real_pred.append(d_real_pred_moy.cpu().detach().numpy())
-
+            current_d_loss += d_loss
 
             if unroll_steps:
                 print("** Unroll D to reduce mode collapse")
@@ -157,14 +192,33 @@ def train_model_4():
             if unroll_steps:
                 D.load_state_dict(d_backup)
 
-            g_loss_tab.append(g_loss.cpu().detach().numpy())
+            current_g_loss += g_loss
+
+        #d_loss
+        current_d_loss = current_d_loss/(iteration + 1) #loss par epoch
+        d_loss_tab.append(current_d_loss.cpu().detach().numpy())
+        
+        #real pred
+        current_real_pred = current_real_pred/(iteration + 1) 
+        d_real_pred_tab.append(current_real_pred.cpu().detach().numpy())
+        
+        #fake pred
+        current_fake_pred = current_fake_pred/(iteration + 1)
+        d_fake_pred_tab.append(current_fake_pred.cpu().detach().numpy())
+
+        #g_loss
+        current_g_loss = current_g_loss/(iteration + 1)
+        g_loss_tab.append(current_g_loss.cpu().detach().numpy())
+
+        #test loss
+        t_loss = test_loss(G, D, testloader, criterionL2, criterionL2, bce_loss)
+        t_loss_tab.append(t_loss)
 
         if epoch % log_interval == 0 or epoch >= n_epochs - 1:
             print("saving...")
             saveModel(G, epoch, constant.saved_path)
-            plotHistLossEpochGAN(epoch, n_iteration_per_epoch, d_loss_tab, g_loss_tab, constant.saved_path)
-            plotHistPredEpochGAN(epoch, n_iteration_per_epoch, d_real_pred, d_fake_pred, constant.saved_path)
-            print("end of save")
+            plotHistLossEpochGAN(epoch, d_loss_tab, g_loss_tab, t_loss_tab)
+            plotHistPredEpochGAN(epoch, d_real_pred_tab, d_fake_pred_tab)
 
         end_epoch = datetime.now()   
         diff = end_epoch - start_epoch

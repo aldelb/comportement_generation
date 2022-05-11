@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 import constant
-from models.model2_skip_connectivity.model import AutoEncoder
+from models.speech_to_speech.model import AutoEncoder
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistLossEpoch
@@ -15,7 +15,8 @@ def test_loss(ae, testloader, criterion):
     print("Calculate test loss...")
     total_loss = 0
     for iteration ,data in enumerate(testloader,0):
-        input, target = data
+        input, _ = data
+        target = input
         input, target = Variable(input), Variable(target)
         input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
         target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))
@@ -28,8 +29,8 @@ def test_loss(ae, testloader, criterion):
     return total_loss.cpu().detach().numpy()
 
 
-def train_model_2():
-    print("Launching of model 2 : simple auto encoder with skip connectivity")
+def train_model_speech_to_speech():
+    print("Launching of model speech to speech")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     batchsize = constant.batch_size
     n_epochs = constant.n_epochs
@@ -57,7 +58,8 @@ def train_model_2():
         current_loss = 0
         for iteration, data in enumerate(trainloader,0):
             print("*"+f"Starting iteration {iteration + 1}/{n_iteration_per_epoch}...")
-            input, target = data
+            input, _ = data
+            target = input
             input, target = Variable(input), Variable(target)
             input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
             target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))

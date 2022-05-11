@@ -7,7 +7,7 @@ import contextlib
 from torchsummary import summary
 #pip install torchsummary
 
-def write_model_2(file_path, model, D):
+def write_model_6(file_path, model, D):
         with open(file_path, "a") as o:
             with contextlib.redirect_stdout(o):
                 summary(model, (constant.prosody_size, 300), batch_size = constant.batch_size)
@@ -37,7 +37,7 @@ class AutoEncoder(nn.Module):
         self.conv_up3 = conv_bn_relu(256 + 512, 256)
         self.conv_up2 = conv_bn_relu(128 + 256, 128)
         self.conv_up1 = conv_bn_relu(128 + 64, 64)
-        self.conv_last = nn.Conv1d(64, constant.pose_size + constant.au_size, 3, stride=1, padding=1, dilation=1, groups=1, bias=True)
+        self.conv_last = nn.Conv1d(64, constant.prosody_size, 3, stride=1, padding=1, dilation=1, groups=1, bias=True)
 
 
     def forward(self, x):

@@ -2,7 +2,6 @@ import argparse
 from genericpath import isdir
 import os
 import numpy as np
-from utils.calculate_kde import calculate_kde
 import constant
 from utils.create_final_file import createFinalFile
 from models.model1_simple_autoencoder.generating import generate_motion_1
@@ -79,12 +78,3 @@ if __name__ == "__main__":
             df_list.append(df)
             #df.to_csv(file_out, sep=',')
             current_part += 1
-    
-
-    if(args.calculate_kde == "True"):
-        print("Calculating KDE...")
-        path_evaluation = constant.dir_path + constant.evaluation_path + model_file[0:-3] + "/"
-        if(not isdir(path_evaluation)):
-            os.makedirs(path_evaluation, exist_ok=True)
-
-        calculate_kde(test_set, path_data_out, path_evaluation)

@@ -9,6 +9,8 @@ from models.model2_skip_connectivity.model import write_model_2
 from models.model3_two_decoders.model import write_model_3
 from models.model4_GAN_autoencoders.model import write_model_4
 from models.model5_Conditional_GAN.model import write_model_5
+from models.pose_to_pose.model import write_model_7
+from models.speech_to_speech.model import write_model_6
 
 config = configparser.RawConfigParser()
 
@@ -24,6 +26,7 @@ def read_params(file):
         constant.unroll_steps =  config.getint('MODEL_TYPE','unroll_steps')
     constant.layer =  config.get('MODEL_TYPE','layer')
     constant.hidden_size =  config.getint('MODEL_TYPE','hidden_size') 
+    constant.kernel_size = config.getint('MODEL_TYPE','kernel_size') 
     constant.dropout =  config.getfloat('MODEL_TYPE','dropout') 
 
     datasets = config.get('PATH','datasets')
@@ -89,6 +92,7 @@ def save_params(saved_path, model, D = None):
         "unroll_steps" : constant.unroll_steps,
         "layer" : constant.layer,
         "hidden_size" : constant.hidden_size,
+        "kernel_size" : constant.kernel_size,
         "dropout" : constant.dropout}
 
     data_params = {
@@ -120,6 +124,10 @@ def save_params(saved_path, model, D = None):
         write_model_4(file_path, model, D)
     elif(constant.model_number == 5):
         write_model_5(file_path, model, D)
+    elif(constant.model_number == 6):
+        write_model_6(file_path, model, D)
+    elif(constant.model_number == 7):
+        write_model_7(file_path, model, D)
     else:
         raise Exception("Model ", constant.model_number, " does not exist")
     

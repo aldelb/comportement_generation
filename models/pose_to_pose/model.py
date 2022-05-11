@@ -7,10 +7,10 @@ import contextlib
 from torchsummary import summary
 #pip install torchsummary
 
-def write_model_2(file_path, model, D):
+def write_model_7(file_path, model, D):
         with open(file_path, "a") as o:
             with contextlib.redirect_stdout(o):
-                summary(model, (constant.prosody_size, 300), batch_size = constant.batch_size)
+                summary(model, (constant.pose_size + constant.au_size, 300), batch_size = constant.batch_size)
         o.close()
 
 def conv_bn_relu(in_channels, out_channels):
@@ -28,7 +28,7 @@ class AutoEncoder(nn.Module):
         self.upsample75 = nn.Upsample(75)  
         
         ##Encoder
-        self.conv_down1 = conv_bn_relu(constant.prosody_size, 64)
+        self.conv_down1 = conv_bn_relu(constant.pose_size + constant.au_size, 64)
         self.conv_down2 = conv_bn_relu(64, 128)
         self.conv_down3 = conv_bn_relu(128, 256)
         self.conv_down4 = conv_bn_relu(256, 512)  

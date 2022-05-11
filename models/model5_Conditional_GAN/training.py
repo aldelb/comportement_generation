@@ -2,7 +2,7 @@ from datetime import datetime
 
 import numpy as np
 from models.model5_Conditional_GAN.model import Generator, Discriminator
-from torch_dataset import TrainSet
+from torch_dataset import TestSet, TrainSet
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistLossEpochGAN, plotHistPredEpochGAN
@@ -22,9 +22,30 @@ sns.set_style('whitegrid')
 # writer = SummaryWriter('./runs/autoencoder')
 #to visualize
 #tensorboard --logdir ./runs/autoencoder/ 
-
 def sample_noise(batch_size, dim):
     return np.random.normal(0, 1, (batch_size, dim))
+
+def test_loss(G, D, testloader, criterion_loss):
+    total_loss = 0
+    for iteration ,data in enumerate(testloader,0):
+        input, target = data
+        input, target = Variable(input), Variable(target)
+        input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
+        target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))
+
+        real_batch_size = input.shape[0]
+        noise = torch.Tensor(sample_noise(real_batch_size, constant.noise_size)).unsqueeze(1).to(device)
+
+        output = G(input.float(), noise)
+        gen_logit = D(output, input.float())
+        gen_lable = torch.ones_like(gen_logit)
+
+        adversarial_loss = criterion_loss(gen_logit, gen_lable)
+        total_loss += adversarial_loss.data
+
+    total_loss = total_loss/(iteration + 1)
+    return total_loss.cpu().detach().numpy()
+
 
 def train_model_5():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -43,6 +64,10 @@ def train_model_5():
     trainloader = torch.utils.data.DataLoader(trainset,batch_size=batch_size,shuffle=True,num_workers=2)
     n_iteration_per_epoch = len(trainloader)
 
+    testset = TestSet()
+    testset.scaling(trainset.x_scaler, trainset.y_scaler)
+    testloader = torch.utils.data.DataLoader(testset,batch_size=batch_size,shuffle=True,num_workers=2)
+
     G = Generator().to(device)
     D = Discriminator().to(device)
 
@@ -55,14 +80,19 @@ def train_model_5():
     bce_loss = torch.nn.BCELoss()
 
     d_loss_tab = []
-    d_real_pred = []
-    d_fake_pred = []
+    d_real_pred_tab = []
+    d_fake_pred_tab = []
     g_loss_tab = []
+    t_loss_tab = []
 
     print("Starting Training Loop...")
     for epoch in range(n_epochs):
-        start_epoch = datetime.now()
         print(f"Starting epoch {epoch + 1}/{n_epochs}...")
+        start_epoch = datetime.now()
+        current_d_loss = 0
+        current_g_loss = 0
+        current_fake_pred = 0
+        current_real_pred = 0
         for iteration, data in enumerate(trainloader, 0):
             print("*"+f"Starting iteration {iteration + 1}/{n_iteration_per_epoch}...")
             torch.cuda.empty_cache()
@@ -85,8 +115,9 @@ def train_model_5():
             real_logit = D(targets.float(), inputs.float()) #produce a result for each frame (tensor of length 300)
             fake_logit = D(fake_targets, inputs.float())
 
-            d_real_pred_moy = torch.mean(real_logit) #moy because the discriminator made a prediction for each frame
-            d_fake_pred_moy = torch.mean(fake_logit)
+            #discriminator prediction
+            current_real_pred += torch.mean(real_logit) #moy because the discriminator made a prediction for each frame
+            current_fake_pred += torch.mean(fake_logit)
 
             real_label = torch.ones_like(real_logit) #tensor fill of 1 with the same size as input
             d_real_error = bce_loss(real_logit, real_label) #measures the Binary Cross Entropy between the target and the input probabilities
@@ -98,9 +129,7 @@ def train_model_5():
             d_loss.backward() #gradients are computed
             d_opt.step() #updates the parameters, the function can be called once the gradients are computed using e.g. backward().
 
-            d_loss_tab.append(d_loss.cpu().detach().numpy())
-            d_fake_pred.append(d_fake_pred_moy.cpu().detach().numpy())
-            d_real_pred.append(d_real_pred_moy.cpu().detach().numpy())
+            current_d_loss += d_loss
 
             if unroll_steps:
                 print("** Unroll D to reduce mode collapse")
@@ -138,13 +167,32 @@ def train_model_5():
             if unroll_steps:
                 D.load_state_dict(d_backup)
 
-            g_loss_tab.append(g_loss.cpu().detach().numpy())
+            current_g_loss += g_loss
 
+        #d_loss
+        current_d_loss = current_d_loss/(iteration + 1) #loss par epoch
+        d_loss_tab.append(current_d_loss.cpu().detach().numpy())
+        
+        #real pred
+        current_real_pred = current_real_pred/(iteration + 1) 
+        d_real_pred_tab.append(current_real_pred.cpu().detach().numpy())
+        
+        #fake pred
+        current_fake_pred = current_fake_pred/(iteration + 1)
+        d_fake_pred_tab.append(current_fake_pred.cpu().detach().numpy())
+
+        #g_loss
+        current_g_loss = current_g_loss/(iteration + 1)
+        g_loss_tab.append(current_g_loss.cpu().detach().numpy())
+
+        #test loss
+        t_loss = test_loss(G, D, testloader, bce_loss)
+        t_loss_tab.append(t_loss)
         if epoch % log_interval == 0 or epoch >= n_epochs - 1:
             print("saving...")
             saveModel(G, epoch, constant.saved_path)
-            plotHistLossEpochGAN(epoch, n_iteration_per_epoch, d_loss_tab, g_loss_tab, constant.saved_path)
-            plotHistPredEpochGAN(epoch, n_iteration_per_epoch, d_real_pred, d_fake_pred, constant.saved_path)
+            plotHistLossEpochGAN(epoch, d_loss_tab, g_loss_tab, t_loss_tab)
+            plotHistPredEpochGAN(epoch, d_real_pred_tab, d_fake_pred_tab)
 
         end_epoch = datetime.now()   
         diff = end_epoch - start_epoch

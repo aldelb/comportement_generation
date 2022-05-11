@@ -3,6 +3,7 @@ model_number = 0
 unroll_steps =  False
 layer = ""
 hidden_size = 0
+kernel_size = 0
 dropout = 1
 
 # --- Path params

@@ -18,7 +18,7 @@ def write_model_4(file_path, model, D):
 
 def conv_bn_relu(in_channels, out_channels):
     return nn.Sequential(
-        nn.Conv1d(in_channels, out_channels, 3, stride=1, padding=1, dilation=1, groups=1, bias=True),
+        nn.Conv1d(in_channels, out_channels, constant.kernel_size, stride=1, padding=1, dilation=1, groups=1, bias=True),
         nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True),
     )   

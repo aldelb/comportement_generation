@@ -19,25 +19,25 @@ class AutoEncoder(nn.Module):
         super(AutoEncoder, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Conv1d(constant.prosody_size, 64, 3, stride=1, padding=1, dilation=1, groups=1, bias=True),
+            nn.Conv1d(constant.prosody_size, 64, constant.kernel_size, stride=1, padding=1, dilation=1, groups=1, bias=True),
             nn.BatchNorm1d(64),
             nn.ReLU(),
             nn.MaxPool1d(2),
-            nn.Conv1d(64, 128, 3, stride=1, padding=1, dilation=1, groups=1, bias=True),
+            nn.Conv1d(64, 128, constant.kernel_size, stride=1, padding=1, dilation=1, groups=1, bias=True),
             nn.BatchNorm1d(128),
             nn.ReLU(),
             nn.MaxPool1d(2),
-            nn.Conv1d(128 , 256 , 3,  stride=1, padding=1, dilation=1, groups=1, bias=True),
+            nn.Conv1d(128 , 256 , constant.kernel_size,  stride=1, padding=1, dilation=1, groups=1, bias=True),
             nn.BatchNorm1d(256),
             nn.ReLU()
         )
         
         self.decoder = nn.Sequential(
-            nn.ConvTranspose1d(256, 128, 3, stride=1, padding=1, dilation=1, groups=1, bias=True),
+            nn.ConvTranspose1d(256, 128, constant.kernel_size, stride=1, padding=1, dilation=1, groups=1, bias=True),
             nn.BatchNorm1d(128),
             nn.ReLU(),
             nn.Upsample(scale_factor=2),
-            nn.ConvTranspose1d(128, 64, 3, stride=1, padding=1, dilation=1, groups=1, bias=True),
+            nn.ConvTranspose1d(128, 64, constant.kernel_size, stride=1, padding=1, dilation=1, groups=1, bias=True),
             nn.BatchNorm1d(64),
             nn.ReLU(),
             nn.Upsample(scale_factor=2),

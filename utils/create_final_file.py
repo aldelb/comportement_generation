@@ -1,9 +1,8 @@
 import pandas as pd
-import constant
 
 def createFinalFile(path_data_out, key, df_list):
     #column which must be beetween 1 and 5, even if the model predict another value
-    positive_cols = ['AU01_r', 'AU02_r', 'AU04_r', 'AU05_r', 'AU06_r', 'AU07_r', 'AU09_r', 'AU10_r', 'AU12_r', 'AU14_r', 'AU15_r', 'AU17_r', 'AU20_r', 'AU23_r', 'AU25_r', 'AU26_r', 'AU45_r']
+    #positive_cols = ['AU01_r', 'AU02_r', 'AU04_r', 'AU05_r', 'AU06_r', 'AU07_r', 'AU09_r', 'AU10_r', 'AU12_r', 'AU14_r', 'AU15_r', 'AU17_r', 'AU20_r', 'AU23_r', 'AU25_r', 'AU26_r', 'AU45_r']
 
     current_number = 0
     df = []
@@ -12,7 +11,7 @@ def createFinalFile(path_data_out, key, df_list):
             df = new_df
         else:
             df = pd.concat([df, new_df], ignore_index=True)
-        df[positive_cols] = df[positive_cols].clip(0,5)
+        #df[positive_cols] = df[positive_cols].clip(0,5)
         current_number += 1
        
     if(len(df) > 0):

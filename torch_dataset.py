@@ -42,8 +42,8 @@ class Set(Dataset):
         X_concat = np.concatenate(X, axis=0)
         Y_concat = np.concatenate(Y, axis=0)
 
-        x_scaler = MinMaxScaler((-1,1)).fit(X_concat)  
-        y_scaler = MinMaxScaler((-1,1)).fit(Y_concat)
+        x_scaler = MinMaxScaler((0,1)).fit(X_concat)  
+        y_scaler = MinMaxScaler((0,1)).fit(Y_concat)
         X_scaled = list(map(x_scaler.transform, X))
         Y_scaled = list(map(y_scaler.transform, Y))
 
@@ -98,17 +98,18 @@ class TrainSet(Set):
             self.Y = self.Y_ori
 
     def scale_x(self, x):
-        assert len(x.shape) == 2, "shape of y must be (t, dim)"
         return self.x_scaler.transform(x)
 
-    def rescale_y(self, y):
-        assert len(y.shape) == 2, "shape of y must be (t, dim)"
+    def rescale_y(self, y):       
         return self.y_scaler.inverse_transform(y)
-
 
 class TestSet(Set):
 
     def __init__(self):
         super(TestSet, self).__init__("test")
+
+    def scaling(self, x_scaler, y_scaler):
+        self.X =  list(map(x_scaler.transform, self.X_ori))
+        self.Y = list(map(y_scaler.transform, self.Y_ori))
 
 
