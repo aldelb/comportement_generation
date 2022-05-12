@@ -15,7 +15,7 @@ def write_model_2(file_path, model, D):
 
 def conv_bn_relu(in_channels, out_channels):
     return nn.Sequential(
-        nn.Conv1d(in_channels, out_channels, constant.kernel_size, stride=1, padding=1, dilation=1, groups=1, bias=True),
+        nn.Conv1d(in_channels, out_channels, constant.kernel_size, padding = constant.padding_size, bias=True),
         nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True),
     )   
@@ -37,7 +37,7 @@ class AutoEncoder(nn.Module):
         self.conv_up3 = conv_bn_relu(256 + 512, 256)
         self.conv_up2 = conv_bn_relu(128 + 256, 128)
         self.conv_up1 = conv_bn_relu(128 + 64, 64)
-        self.conv_last = nn.Conv1d(64, constant.pose_size + constant.au_size, 3, stride=1, padding=1, dilation=1, groups=1, bias=True)
+        self.conv_last = nn.Conv1d(64, constant.pose_size + constant.au_size, 3, padding = constant.padding_size, bias=True)
 
 
     def forward(self, x):
