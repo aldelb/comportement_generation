@@ -41,7 +41,7 @@ class AutoEncoder(nn.Module):
         self.upsample2_pose = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)  
         self.conv_up1_pose = conv_bn_relu(128 + 64, 64) 
         
-        self.conv_last_pose = nn.Conv1d(64, constant.pose_size, 3, padding = constant.padding_size, bias=True)
+        self.conv_last = nn.Conv1d(64, constant.pose_size, constant.kernel_size, padding = constant.padding_size, bias=True)
 
         ##Decoder AUs
         self.upsample75_au = nn.Upsample(75)  
@@ -51,7 +51,7 @@ class AutoEncoder(nn.Module):
         self.upsample2_au = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)  
         self.conv_up1_au = conv_bn_relu(128 + 64, 64) 
 
-        self.conv_last_au = nn.Conv1d(64, constant.au_size, 3, padding = constant.padding_size, bias=True)
+        self.conv_last = nn.Conv1d(64, constant.au_size, constant.kernel_size, padding = constant.padding_size, bias=True)
 
     def forward(self, x):
         #Encoder

@@ -37,7 +37,7 @@ class AutoEncoder(nn.Module):
         self.conv_up3 = conv_bn_relu(256 + 512, 256)
         self.conv_up2 = conv_bn_relu(128 + 256, 128)
         self.conv_up1 = conv_bn_relu(128 + 64, 64)
-        self.conv_last = nn.Conv1d(64, constant.prosody_size, 3, padding = constant.padding_size, bias=True)
+        self.conv_last = nn.Conv1d(64, constant.prosody_size, constant.kernel_size, padding = constant.padding_size, bias=True)
 
 
     def forward(self, x):

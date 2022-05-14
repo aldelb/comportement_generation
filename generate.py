@@ -31,9 +31,8 @@ def generate_motion(model, input):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-params', help='Path to the constant file', default="./params.cfg")
-    parser.add_argument('-epoch', help='number of epoch of recovred model', default=5)
+    parser.add_argument('-epoch', help='number of epoch of recovred model', default=4)
     parser.add_argument('-video', help='wich video we want to generate', default="all")
-    parser.add_argument('-calculate_kde', help='objective mesure', default="True")
     args = parser.parse_args()
     read_params(args.params)
 
