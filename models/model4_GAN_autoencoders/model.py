@@ -16,9 +16,9 @@ def write_model_4(file_path, model, D):
             summary(D, [(constant.pose_size + constant.au_size, 300), (constant.prosody_size, 300)], batch_size = constant.batch_size)
     o.close()
 
-def conv_bn_relu(in_channels, out_channels):
+def conv_bn_relu(in_channels, out_channels, kernel, padding):
     return nn.Sequential(
-        nn.Conv1d(in_channels, out_channels, constant.kernel_size, padding = constant.padding_size, bias=True),
+        nn.Conv1d(in_channels, out_channels, kernel, padding = padding, bias=True),
         nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True),
     )   
@@ -27,39 +27,39 @@ class AutoEncoder(nn.Module):
     def __init__(self):
         super(AutoEncoder, self).__init__()
         ##Encoder
-        self.conv_down1 = conv_bn_relu(constant.prosody_size, 64)
+        self.conv_down1 = conv_bn_relu(constant.prosody_size, 64, constant.first_kernel_size, constant.first_padding_size)
         self.maxpool1 = nn.MaxPool1d(2)
-        self.conv_down2 = conv_bn_relu(64, 128)
+        self.conv_down2 = conv_bn_relu(64, 128, constant.kernel_size, constant.padding_size)
         self.maxpool2 = nn.MaxPool1d(2)
-        self.conv_down3 = conv_bn_relu(128, 256)
+        self.conv_down3 = conv_bn_relu(128, 256, constant.kernel_size, constant.padding_size)
         self.maxpool3 = nn.MaxPool1d(2)
-        self.conv_down4 = conv_bn_relu(256, 512)  
+        self.conv_down4 = conv_bn_relu(256, 512, constant.kernel_size, constant.padding_size)  
 
         
         ##Decoder pose
         self.upsample75_pose = nn.Upsample(75) 
-        self.conv_up3_pose = conv_bn_relu(256 + 512, 256)
+        self.conv_up3_pose = conv_bn_relu(256 + 512, 256, constant.kernel_size, constant.padding_size)
         self.upsample3_pose = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)  
-        self.conv_up2_pose = conv_bn_relu(128 + 256, 128)
+        self.conv_up2_pose = conv_bn_relu(128 + 256, 128, constant.kernel_size, constant.padding_size)
         self.upsample2_pose = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)  
-        self.conv_up1_pose = conv_bn_relu(128 + 64, 64) 
-        self.conv_last = nn.Conv1d(64, constant.pose_size, constant.kernel_size, padding = constant.padding_size, bias=True)
+        self.conv_up1_pose = conv_bn_relu(128 + 64, 64, constant.kernel_size, constant.padding_size) 
+        self.conv_last_pose = nn.Conv1d(64, constant.pose_size, constant.kernel_size, padding = constant.padding_size, bias=True)
 
         ##Decoder AUs
         self.upsample75_au = nn.Upsample(75)  
-        self.conv_up3_au = conv_bn_relu(256 + 512, 256)
+        self.conv_up3_au = conv_bn_relu(256 + 512, 256, constant.kernel_size, constant.padding_size)
         self.upsample3_au = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)  
-        self.conv_up2_au = conv_bn_relu(128 + 256, 128)
+        self.conv_up2_au = conv_bn_relu(128 + 256, 128, constant.kernel_size, constant.padding_size)
         self.upsample2_au = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)  
-        self.conv_up1_au = conv_bn_relu(128 + 64, 64) 
-        self.conv_last = nn.Conv1d(64, constant.au_size, constant.kernel_size, padding = constant.padding_size, bias=True)
+        self.conv_up1_au = conv_bn_relu(128 + 64, 64, constant.kernel_size, constant.padding_size) 
+        self.conv_last_au = nn.Conv1d(64, constant.au_size, constant.kernel_size, padding = constant.padding_size, bias=True)
 
         ##Discriminator
         self.dconv1 = conv_bn_relu(constant.pose_size + constant.au_size + constant.prosody_size, 64)
         self.dmaxpool1 = nn.MaxPool1d(2)
-        self.dconv2 = conv_bn_relu(64, 128)
+        self.dconv2 = conv_bn_relu(64, 128, constant.kernel_size, constant.padding_size)
         self.dmaxpool2 = nn.MaxPool1d(2)
-        self.dconv3 = conv_bn_relu(128, 256)
+        self.dconv3 = conv_bn_relu(128, 256, constant.kernel_size, constant.padding_size)
         self.dmaxpool3 = nn.MaxPool1d(2)
         self.linear = nn.Linear(37, constant.pose_size + constant.au_size)
 

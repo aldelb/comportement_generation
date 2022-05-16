@@ -19,7 +19,7 @@ class AutoEncoder(nn.Module):
         super(AutoEncoder, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Conv1d(constant.prosody_size, 64, constant.kernel_size, padding = constant.padding_size, bias=True),
+            nn.Conv1d(constant.prosody_size, 64, constant.first_kernel_size, padding = constant.first_padding_size, bias=True),
             nn.BatchNorm1d(64),
             nn.ReLU(),
             nn.MaxPool1d(2),
@@ -41,7 +41,7 @@ class AutoEncoder(nn.Module):
             nn.BatchNorm1d(64),
             nn.ReLU(),
             nn.Upsample(scale_factor=2),
-            nn.ConvTranspose1d(64, constant.pose_size + constant.au_size, 3, padding = constant.padding_size, bias=True)
+            nn.ConvTranspose1d(64, constant.pose_size + constant.au_size, constant.kernel_size, padding = constant.padding_size, bias=True)
         )
 
     def forward(self, x):

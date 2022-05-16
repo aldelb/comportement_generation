@@ -27,7 +27,9 @@ def read_params(file):
     constant.layer =  config.get('MODEL_TYPE','layer')
     constant.hidden_size =  config.getint('MODEL_TYPE','hidden_size') 
     constant.kernel_size = config.getint('MODEL_TYPE','kernel_size') 
+    constant.first_kernel_size = config.getint('MODEL_TYPE','first_kernel_size') 
     constant.padding_size = int((constant.kernel_size - 1)/2)
+    constant.first_padding_size = int((constant.first_kernel_size - 1)/2)
     constant.dropout =  config.getfloat('MODEL_TYPE','dropout') 
 
     datasets = config.get('PATH','datasets')
@@ -93,7 +95,9 @@ def save_params(saved_path, model, D = None):
         "unroll_steps" : constant.unroll_steps,
         "layer" : constant.layer,
         "hidden_size" : constant.hidden_size,
+        "first_kernel_size" : constant.first_kernel_size,
         "kernel_size" : constant.kernel_size,
+        "first_padding_size" : constant.first_padding_size,
         "padding_size" : constant.padding_size,
         "dropout" : constant.dropout}
 

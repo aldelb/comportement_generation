@@ -37,7 +37,7 @@ def create_pca(real_frames, gened_frames, path_evaluation):
     X_real = scaler.transform(real_frames) 
 
     mypca = PCA(n_components=2) # On paramètre ici pour ne garder que 2 axes
-    mypca.fit(X_gened)
+    mypca.fit(X_real)
 
     print(mypca.singular_values_) # Valeurs de variance
     print('Explained variation per principal component: {}'.format(mypca.explained_variance_ratio_))
@@ -47,7 +47,7 @@ def create_pca(real_frames, gened_frames, path_evaluation):
     df_generated = pd.DataFrame(data = data_generated, columns = ['principal component 1', 'principal component 2'])
     df_real = pd.DataFrame(data = data_real, columns = ['principal component 1', 'principal component 2'])
 
-    indicesToKeep = random.sample(range(len(df_generated)), 300)
+    indicesToKeep = random.sample(range(len(df_real)), 300)
 
     fig = plt.figure(dpi=100)
     ax1 = fig.add_subplot(1, 1, 1)
@@ -70,12 +70,12 @@ def calculate_kde(real_frames, gened_frames, path_evaluation):
 
     mean = np.mean(scores)
     sd = np.std(scores)
-    print("mean ", mean)
-    print("ses ", sd)
+    print("mean ", str(mean))
+    print("ses ", str(sd))
 
     f = open(path_evaluation + "eval.txt", "w")
-    f.write("mean "+ mean + "\n")
-    f.write("sd "+ sd + "\n")
+    f.write("mean "+ str(mean) + "\n")
+    f.write("sd "+ str(sd) + "\n")
     f.close()
 
 if __name__ == "__main__":

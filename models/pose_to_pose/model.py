@@ -13,9 +13,9 @@ def write_model_7(file_path, model, D):
                 summary(model, (constant.pose_size + constant.au_size, 300), batch_size = constant.batch_size)
         o.close()
 
-def conv_bn_relu(in_channels, out_channels):
+def conv_bn_relu(in_channels, out_channels, kernel, padding):
     return nn.Sequential(
-        nn.Conv1d(in_channels, out_channels, constant.kernel_size, padding=constant.padding_size, bias=True),
+        nn.Conv1d(in_channels, out_channels, kernel, padding=padding, bias=True),
         nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True),
     )   
@@ -28,15 +28,15 @@ class AutoEncoder(nn.Module):
         self.upsample75 = nn.Upsample(75)  
         
         ##Encoder
-        self.conv_down1 = conv_bn_relu(constant.pose_size + constant.au_size, 64)
-        self.conv_down2 = conv_bn_relu(64, 128)
-        self.conv_down3 = conv_bn_relu(128, 256)
-        self.conv_down4 = conv_bn_relu(256, 512)  
+        self.conv_down1 = conv_bn_relu(constant.pose_size + constant.au_size, 64, constant.first_kernel_size, constant.first_padding_size)
+        self.conv_down2 = conv_bn_relu(64, 128, constant.kernel_size, constant.padding_size)
+        self.conv_down3 = conv_bn_relu(128, 256, constant.kernel_size, constant.padding_size)
+        self.conv_down4 = conv_bn_relu(256, 512, constant.kernel_size, constant.padding_size)  
 
         ##Decoder
-        self.conv_up3 = conv_bn_relu(256 + 512, 256)
-        self.conv_up2 = conv_bn_relu(128 + 256, 128)
-        self.conv_up1 = conv_bn_relu(128 + 64, 64)
+        self.conv_up3 = conv_bn_relu(256 + 512, 256, constant.kernel_size, constant.padding_size)
+        self.conv_up2 = conv_bn_relu(128 + 256, 128, constant.kernel_size, constant.padding_size)
+        self.conv_up1 = conv_bn_relu(128 + 64, 64, constant.kernel_size, constant.padding_size)
         self.conv_last = nn.Conv1d(64, constant.pose_size + constant.au_size, constant.kernel_size, padding = constant.padding_size, bias=True)
 
 
