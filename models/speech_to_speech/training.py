@@ -63,7 +63,7 @@ def train_model_speech_to_speech():
             input, target = Variable(input), Variable(target)
             input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
             target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))
-            ae.zero_grad()
+            optimizer.zero_grad()
 
             output = ae(input.float())
             loss = criterion(output, target.float())

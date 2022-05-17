@@ -89,7 +89,7 @@ def train_model_3():
             input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
             target_pose = torch.reshape(target_pose, (-1, target_pose.shape[2], target_pose.shape[1]))
             target_au = torch.reshape(target_au, (-1, target_au.shape[2], target_au.shape[1]))
-            ae.zero_grad()
+            optimizer.zero_grad()
 
             output_pose, output_au = ae(input.float())
 

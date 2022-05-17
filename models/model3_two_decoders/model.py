@@ -5,6 +5,7 @@ from torch.autograd import Variable
 import constant
 import contextlib
 from torchsummary import summary
+from utils.model_parts import DoubleConv, Down, OutConv, Up
 #pip install torchsummary
 
 def write_model_3(file_path, model, D):
@@ -13,89 +14,58 @@ def write_model_3(file_path, model, D):
                 summary(model, (constant.prosody_size, 300), batch_size = constant.batch_size)
         o.close()
 
-def conv_bn_relu(in_channels, out_channels, kernel, padding):
-    return nn.Sequential(
-        nn.Conv1d(in_channels, out_channels, kernel, padding = padding, bias=True),
-        nn.BatchNorm1d(out_channels),
-        nn.ReLU(inplace=True),
-    )   
 
 class AutoEncoder(nn.Module):
     def __init__(self):
         super(AutoEncoder, self).__init__() 
+        bilinear = True
+        factor = 2 if bilinear else 1
         ##Encoder
-        self.conv_down1 = conv_bn_relu(constant.prosody_size, 64, constant.first_kernel_size, constant.first_padding_size)
-        self.maxpool1 = nn.MaxPool1d(2)
-        self.conv_down2 = conv_bn_relu(64, 128, constant.kernel_size, constant.padding_size)
-        self.maxpool2 = nn.MaxPool1d(2)
-        self.conv_down3 = conv_bn_relu(128, 256, constant.kernel_size, constant.padding_size)
-        self.maxpool3 = nn.MaxPool1d(2)
-        self.conv_down4 = conv_bn_relu(256, 512, constant.kernel_size, constant.padding_size)  
+
+        self.inc = DoubleConv(constant.prosody_size, 64, constant.first_kernel_size, constant.first_padding_size)
+        self.down1 = Down(64, 128, constant.kernel_size, constant.padding_size)
+        self.down2 = Down(128, 256, constant.kernel_size, constant.padding_size)
+        self.down3 = Down(256, 512, constant.kernel_size, constant.padding_size)
+        self.down4 = Down(512, 1024 // factor, constant.kernel_size, constant.padding_size)
 
         
         ##Decoder pose
-        self.upsample75_pose = nn.Upsample(75) 
-        self.conv_up3_pose = conv_bn_relu(256 + 512, 256, constant.kernel_size, constant.padding_size)
-        self.upsample3_pose = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)  
-        self.conv_up2_pose = conv_bn_relu(128 + 256, 128, constant.kernel_size, constant.padding_size)
-        self.upsample2_pose = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)  
-        self.conv_up1_pose = conv_bn_relu(128 + 64, 64, constant.kernel_size, constant.padding_size) 
-        
-        self.conv_last_pose = nn.Conv1d(64, constant.pose_size, constant.kernel_size, padding = constant.padding_size, bias=True)
+        self.up1_pose = Up(1024, 512 // factor, constant.kernel_size, constant.padding_size, bilinear)
+        self.up2_pose = Up(512, 256 // factor, constant.kernel_size, constant.padding_size, bilinear)
+        self.up3_pose = Up(256, 128 // factor, constant.kernel_size, constant.padding_size, bilinear)
+        self.up4_pose = Up(128, 64, constant.kernel_size, constant.padding_size, bilinear)
+        self.outc_pose = OutConv(64, constant.pose_size, constant.kernel_size, constant.padding_size)
 
         ##Decoder AUs
-        self.upsample75_au = nn.Upsample(75)  
-        self.conv_up3_au = conv_bn_relu(256 + 512, 256, constant.kernel_size, constant.padding_size)
-        self.upsample3_au = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)  
-        self.conv_up2_au = conv_bn_relu(128 + 256, 128, constant.kernel_size, constant.padding_size)
-        self.upsample2_au = nn.Upsample(scale_factor=2, mode="linear", align_corners=True)  
-        self.conv_up1_au = conv_bn_relu(128 + 64, 64, constant.kernel_size, constant.padding_size) 
+        self.up1_au = Up(1024, 512 // factor, constant.kernel_size, constant.padding_size, bilinear)
+        self.up2_au = Up(512, 256 // factor, constant.kernel_size, constant.padding_size, bilinear)
+        self.up3_au = Up(256, 128 // factor, constant.kernel_size, constant.padding_size, bilinear)
+        self.up4_au = Up(128, 64, constant.kernel_size, constant.padding_size, bilinear)
+        self.outc_au = OutConv(64, constant.au_size, constant.kernel_size, constant.padding_size)
 
-        self.conv_last_au = nn.Conv1d(64, constant.au_size, constant.kernel_size, padding = constant.padding_size, bias=True)
 
     def forward(self, x):
         #Encoder
-        conv1 = self.conv_down1(x)
-        x = self.maxpool1(conv1)
-
-        conv2 = self.conv_down2(x)
-        x = self.maxpool2(conv2)
-        
-        conv3 = self.conv_down3(x)
-        x = self.maxpool3(conv3)
-        
-        last_x_encoder = self.conv_down4(x)
+        x1 = self.inc(x)
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
+        x5 = self.down4(x4)
         
         #Decoder pose and gaze angle
-        x = self.upsample75_pose(last_x_encoder)
-        x = torch.cat([x, conv3], dim=1)
-
-        x = self.conv_up3_pose(x)
-        x = self.upsample3_pose(x)        
-        x = torch.cat([x, conv2], dim=1)       
-
-        x = self.conv_up2_pose(x)
-        x = self.upsample2_pose(x)        
-        x = torch.cat([x, conv1], dim=1)   
-        
-        x = self.conv_up1_pose(x)
-        
-        out_pose = self.conv_last_pose(x)
+        x = self.up1_pose(x5, x4)
+        x = self.up2_pose(x, x3)
+        x = self.up3_pose(x, x2)
+        x = self.up4_pose(x, x1)
+        logits_pose = self.outc_pose(x)
+        logits_pose = torch.sigmoid(logits_pose)
 
         #Decoder AUs
-        x = self.upsample75_au(last_x_encoder)
-        x = torch.cat([x, conv3], dim=1)
-
-        x = self.conv_up3_au(x)
-        x = self.upsample3_au(x)        
-        x = torch.cat([x, conv2], dim=1)       
-
-        x = self.conv_up2_au(x)
-        x = self.upsample2_au(x)        
-        x = torch.cat([x, conv1], dim=1)   
+        x = self.up1_au(x5, x4)
+        x = self.up2_au(x, x3)
+        x = self.up3_au(x, x2)
+        x = self.up4_au(x, x1)
+        logits_au = self.outc_au(x)
+        logits_au = torch.sigmoid(logits_au)
         
-        x = self.conv_up1_au(x)
-        
-        out_au = self.conv_last_au(x)
-        
-        return out_pose, out_au
+        return logits_pose, logits_au
