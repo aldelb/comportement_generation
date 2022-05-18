@@ -29,6 +29,9 @@ log_interval =  0
 # --- Data params
 noise_size = 0
 pose_size = 0 # nombre de colonne openface pose and gaze angle
+eye_size = 0 #nombre de colonne openface gaze (déja normalisé)
+pose_t_size = 0 #location of the head with respect to camera
+pose_r_size = 0 # Rotation is in radians around X,Y,Z axes with camera being the origin.
 au_size = 0 # nombre de colonne openface AUs
 prosody_size = 0 #nombre de colonne opensmile selectionnées
 derivative = False

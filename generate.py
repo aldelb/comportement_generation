@@ -3,11 +3,12 @@ from genericpath import isdir
 import os
 import numpy as np
 import constant
+from models.pose_to_pose.generating import generate_motion_7
 from utils.create_final_file import createFinalFile
 from models.model1_simple_autoencoder.generating import generate_motion_1
-from models.model2_skip_connectivity.generating import generate_motion_2
-from models.model3_two_decoders.generating import generate_motion_3
-from models.model4_GAN_autoencoders.generating import generate_motion_4
+from models.model2_skip_connectivity.generating import GenerateModel2
+from models.model3_two_decoders.generating import GenerateModel3
+from models.model4_GAN_autoencoders.generating import GenerateModel4
 from models.model5_Conditional_GAN.generating import generate_motion_5
 from utils.model_utils import find_model, load_model
 from utils.params_utils import read_params
@@ -18,20 +19,25 @@ def generate_motion(model, input):
     if(constant.model_number == 1):
         return generate_motion_1(model, input)
     elif(constant.model_number == 2):
-        return generate_motion_2(model, input)
+        generator = GenerateModel2()
+        return generator.generate_motion(model, input)
     elif(constant.model_number == 3):
-        return generate_motion_3(model, input)
+        generator = GenerateModel3()
+        return generator.generate_motion(model, input)
     elif(constant.model_number == 4):
-        return generate_motion_4(model, input)
+        generator = GenerateModel4()
+        return generator.generate_motion(model, input)
     elif(constant.model_number == 5):
         return generate_motion_5(model, input)
+    elif(constant.model_number == 7):
+        return generate_motion_7(model, input)
     else:
         raise Exception("Model ", constant.model_number, " does not exist")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-params', help='Path to the constant file', default="./params.cfg")
-    parser.add_argument('-epoch', help='number of epoch of recovred model', default=40)
+    parser.add_argument('-epoch', help='number of epoch of recovred model', default=9)
     parser.add_argument('-video', help='wich video we want to generate', default="all")
     args = parser.parse_args()
     read_params(args.params)
@@ -53,7 +59,9 @@ if __name__ == "__main__":
     df_list = []
 
     for index, data in enumerate(test_set):
-        input, _ = data
+        input, target = data
+        if(constant.model_number == 7):
+            input = target
         key = test_set.getInterval(index)[0]
         if(args.video == "all" or key == args.video + "[0]"):
             if(current_key != key): #process of a new video
@@ -68,7 +76,6 @@ if __name__ == "__main__":
                 input = np.reshape(input, input.shape + (1,))
 
             out = generate_motion(model, input)
-
             #file_out = path_data_out + key + "-" + str(current_part) + ".csv"
             timestamp = np.array(test_set.getInterval(index)[1][:,0])
             out = np.concatenate((timestamp.reshape(-1,1), out), axis=1)

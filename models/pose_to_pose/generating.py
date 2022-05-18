@@ -3,11 +3,11 @@ import constant
 from torch_dataset import TrainSet
 
 
-def generate_motion_2(model, inputs, noise=None):
+def generate_motion_7(model, inputs, noise=None):
 
     dset = TrainSet()
     # Config input
-    inputs = dset.scale_x(inputs)
+    inputs = dset.scale_y(inputs)
     inputs = torch.FloatTensor(inputs).unsqueeze(1)
     inputs = torch.reshape(inputs, (-1, inputs.shape[2], inputs.shape[0]))
     with torch.no_grad():

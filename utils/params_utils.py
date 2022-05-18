@@ -51,6 +51,9 @@ def read_params(file):
     # --- Data params
     constant.noise_size = config.getint('DATA','noise_size')
     constant.pose_size = config.getint('DATA','pose_size') 
+    constant.eye_size = config.getint('DATA','eye_size')
+    constant.pose_t_size = config.getint('DATA','pose_t_size')
+    constant.pose_r_size = config.getint('DATA','pose_r_size')
     constant.au_size = config.getint('DATA','au_size') 
     constant.derivative = config.getboolean('DATA','derivative')
 

@@ -100,6 +100,9 @@ class TrainSet(Set):
     def scale_x(self, x):
         return self.x_scaler.transform(x)
 
+    def scale_y(self, y):
+        return self.y_scaler.transform(y)
+
     def rescale_y(self, y):       
         return self.y_scaler.inverse_transform(y)
 

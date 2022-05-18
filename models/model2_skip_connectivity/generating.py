@@ -1,18 +1,16 @@
 import torch
 import constant
+from models.GenerateClass import Generate
 from torch_dataset import TrainSet
 
 
-def generate_motion_2(model, inputs, noise=None):
+class GenerateModel2(Generate):
+    def __init__(self):
+        super(GenerateModel2, self).__init__()
 
-    dset = TrainSet()
-    # Config input
-    inputs = dset.scale_x(inputs)
-    inputs = torch.FloatTensor(inputs).unsqueeze(1)
-    inputs = torch.reshape(inputs, (-1, inputs.shape[2], inputs.shape[0]))
-    with torch.no_grad():
-        outs = model.forward(inputs).squeeze(1).numpy()
-    outs = torch.FloatTensor(outs).unsqueeze(1)
-    outs = torch.reshape(outs, (-1, constant.pose_size + constant.au_size))
-    outs = dset.rescale_y(outs)
-    return outs
+    def generate_motion(self, model, inputs):
+        inputs = self.reshape_input(inputs)
+        with torch.no_grad():
+            outs = model.forward(inputs)
+        outs = self.reshape_single_output(outs)
+        return outs
