@@ -23,7 +23,7 @@ def getData(path_data_out):
         pd_file = pd_file[["gaze_0_x", "gaze_0_y", "gaze_0_z", "gaze_1_x", "gaze_1_y", "gaze_1_z", "gaze_angle_x", "gaze_angle_y", "pose_Tx", "pose_Ty", "pose_Tz", "pose_Rx", "pose_Ry",
                 "pose_Rz", "AU01_r", "AU02_r", "AU04_r", "AU05_r", "AU06_r", "AU07_r", "AU09_r", "AU10_r", "AU12_r", "AU14_r", "AU15_r", "AU17_r", "AU20_r", "AU23_r", "AU25_r", "AU26_r", "AU45_r"]]
         gened_seqs.append(pd_file)
-    
+
     gened_frames = np.concatenate(gened_seqs, axis=0)
     real_frames = np.concatenate(test_set.Y_final_ori, axis=0)
 
@@ -47,12 +47,12 @@ def create_pca(real_frames, gened_frames, path_evaluation):
     df_generated = pd.DataFrame(data = data_generated, columns = ['principal component 1', 'principal component 2'])
     df_real = pd.DataFrame(data = data_real, columns = ['principal component 1', 'principal component 2'])
 
-    indicesToKeep = random.sample(range(len(df_real)), 300)
+    indicesToKeep = random.sample(range(len(df_generated)), 1000)
 
     fig = plt.figure(dpi=100)
     ax1 = fig.add_subplot(1, 1, 1)
-    ax1.scatter(df_generated.loc[indicesToKeep, 'principal component 1'], df_generated.loc[indicesToKeep, 'principal component 2'], label='Generated data')
     ax1.scatter(df_real.loc[indicesToKeep, 'principal component 1'], df_real.loc[indicesToKeep, 'principal component 2'], label='Real data')
+    ax1.scatter(df_generated.loc[indicesToKeep, 'principal component 1'], df_generated.loc[indicesToKeep, 'principal component 2'], label='Generated data')
     ax1.set_xlabel('Principal Component - 1')
     ax1.set_ylabel('Principal Component - 2')
     ax1.legend()
@@ -81,7 +81,7 @@ def calculate_kde(real_frames, gened_frames, path_evaluation):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-params', help='Path to the constant file', default="./params.cfg")
-    parser.add_argument('-epoch', help='number of epoch of recovred model', default=4)
+    parser.add_argument('-epoch', help='number of epoch of recovred model', default=9)
     args = parser.parse_args()
     read_params(args.params)
 

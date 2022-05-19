@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 import constant
 from models.TrainClass import Train
-from models.model3_two_decoders.model import AutoEncoder
+from models.model3_multiple_decoders.model import AutoEncoder
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistAllLossEpoch, plotHistLossEpoch
@@ -44,7 +44,6 @@ class TrainModel3(Train):
         ae = AutoEncoder()
         optimizer = optim.Adam(ae.parameters(), lr=constant.g_lr)
         criterionL2 = nn.MSELoss()
-        criterionL1 = nn.L1Loss()
         save_params(constant.saved_path, ae)
 
         ####Tensorboard visualisation#########

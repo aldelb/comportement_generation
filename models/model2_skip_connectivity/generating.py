@@ -1,8 +1,5 @@
 import torch
-import constant
 from models.GenerateClass import Generate
-from torch_dataset import TrainSet
-
 
 class GenerateModel2(Generate):
     def __init__(self):

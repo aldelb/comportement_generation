@@ -65,12 +65,6 @@ class TrainModel2(Train):
                 loss.backward() #gradients are computed
                 optimizer.step()  #updates the parameters, the function can be called once the gradients are computed using e.g. backward().
                 
-                print(loss_eye)
-                print(loss_pose_t)
-                print(loss_pose_r)
-                print(loss_au)
-                print("loss ", loss)
-                
                 self.current_loss_eye += loss_eye
                 self.current_loss_pose_t += loss_pose_t
                 self.current_loss_pose_r += loss_pose_r

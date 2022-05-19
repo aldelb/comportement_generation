@@ -6,10 +6,11 @@ import configparser
 import constant
 from models.model1_simple_autoencoder.model import write_model_1
 from models.model2_skip_connectivity.model import write_model_2
-from models.model3_two_decoders.model import write_model_3
+from models.model3_multiple_decoders.model import write_model_3
 from models.model4_GAN_autoencoders.model import write_model_4
 from models.model5_Conditional_GAN.model import write_model_5
 from models.pose_to_pose.model import write_model_7
+from models.pose_to_pose_multiple_decoders.model import write_model_8
 from models.speech_to_speech.model import write_model_6
 
 config = configparser.RawConfigParser()
@@ -137,6 +138,8 @@ def save_params(saved_path, model, D = None):
         write_model_6(file_path, model, D)
     elif(constant.model_number == 7):
         write_model_7(file_path, model, D)
+    elif(constant.model_number == 8):
+        write_model_8(file_path, model, D)
     else:
         raise Exception("Model ", constant.model_number, " does not exist")
     

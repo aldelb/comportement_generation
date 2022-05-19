@@ -11,6 +11,12 @@ class Generate():
         inputs = torch.FloatTensor(inputs).unsqueeze(1)
         inputs = torch.reshape(inputs, (-1, inputs.shape[2], inputs.shape[0]))
         return inputs
+    
+    def reshape_input_pose(self, inputs):
+        inputs = self.dset.scale_y(inputs)
+        inputs = torch.FloatTensor(inputs).unsqueeze(1)
+        inputs = torch.reshape(inputs, (-1, inputs.shape[2], inputs.shape[0]))
+        return inputs
 
     def reshape_output(self, output_eye, output_pose_t, output_pose_r, output_au):
         output_eye = torch.FloatTensor(output_eye)
