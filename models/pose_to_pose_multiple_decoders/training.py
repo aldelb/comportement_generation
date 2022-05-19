@@ -54,10 +54,10 @@ class TrainModel8(Train):
                 optimizer.zero_grad()
 
                 output_eye, output_pose_t, output_pose_r, output_au = ae(input)
-                loss_eye = criterionL2(output_eye, target_eye.float())
-                loss_pose_t = criterionL2(output_pose_t, target_pose_t.float())
-                loss_pose_r = criterionL2(output_pose_r, target_pose_r.float())
-                loss_au = criterionL2(output_au, target_au.float())
+                loss_eye = criterionL2(output_eye, target_eye)
+                loss_pose_t = criterionL2(output_pose_t, target_pose_t)
+                loss_pose_r = criterionL2(output_pose_r, target_pose_r)
+                loss_au = criterionL2(output_au, target_au)
 
                 loss = loss_eye + loss_pose_t + loss_pose_r + loss_au  # add weight ??
 

@@ -81,19 +81,14 @@ class Train():
             self.current_real_pred = 0
 
     def format_data(self, input, target):
-        target_eye, target_pose_t, target_pose_r, target_au = self.format_openface_output(target, dim=2)
-
-        input, target_eye, target_pose_t, target_pose_r, target_au = Variable(input), Variable(target_eye), Variable(target_pose_t), Variable(target_pose_r),  Variable(target_au)
-        
+        input, target = Variable(input), Variable(target)
         input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
-        target_eye = torch.reshape(target_eye, (-1, target_eye.shape[2], target_eye.shape[1]))
-        target_pose_t = torch.reshape(target_pose_t, (-1, target_pose_t.shape[2], target_pose_t.shape[1]))
-        target_pose_r = torch.reshape(target_pose_r, (-1, target_pose_r.shape[2], target_pose_r.shape[1]))
-        target_au = torch.reshape(target_au, (-1, target_au.shape[2], target_au.shape[1]))
+        target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))
+        target_eye, target_pose_t, target_pose_r, target_au = self.separate_openface_features(target, dim=1)
 
         return input.float(), target_eye.float(), target_pose_t.float(), target_pose_r.float(), target_au.float()
 
-    def format_openface_output(self, output, dim):
+    def separate_openface_features(self, output, dim):
         output_eye = torch.index_select(output, dim, torch.tensor(range(constant.eye_size)))
         output_pose_t = torch.index_select(output, dim, torch.tensor(range(constant.eye_size, constant.eye_size + constant.pose_t_size)))
         output_pose_r = torch.index_select(output, dim, torch.tensor(range(constant.eye_size + constant.pose_t_size, constant.eye_size + constant.pose_t_size + constant.pose_r_size)))

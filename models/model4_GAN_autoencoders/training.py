@@ -93,7 +93,7 @@ class TrainModel4(Train):
                 inputs, targets = data
                 inputs, target_eye, target_pose_t, target_pose_r, target_au = self.format_data(inputs, targets)
                 targets = Variable(targets)
-                targets = torch.reshape(targets, (-1, targets.shape[2], targets.shape[1]))
+                targets = torch.reshape(targets, (-1, targets.shape[2], targets.shape[1])).float()
 
                 # * Generate fake data
                 with torch.no_grad():

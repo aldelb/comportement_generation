@@ -1,4 +1,5 @@
 from datetime import datetime
+import pandas
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -52,18 +53,18 @@ class TrainModel7(Train):
                 input = target
                 input, target_eye, target_pose_t, target_pose_r, target_au = self.format_data(input, target)
                 target = Variable(target)
-                target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))
+                target = torch.reshape(target, (-1, target.shape[2], target.shape[1])).float()
 
                 optimizer.zero_grad()
 
-                output = ae(input.float())
-                output_eye, output_pose_t, output_pose_r, output_au = self.format_openface_output(output, dim=1)
+                output = ae(input) 
+                output_eye, output_pose_t, output_pose_r, output_au = self.separate_openface_features(output, dim=1)
 
-                loss_eye = criterion(output_eye, target_eye.float())
-                loss_pose_t = criterion(output_pose_t, target_pose_t.float())
-                loss_pose_r = criterion(output_pose_r, target_pose_r.float())
-                loss_au = criterion(output_au, target_au.float())
-                loss = criterion(output, target.float())
+                loss_eye = criterion(output_eye, target_eye)
+                loss_pose_t = criterion(output_pose_t, target_pose_t)
+                loss_pose_r = criterion(output_pose_r, target_pose_r)
+                loss_au = criterion(output_au, target_au)
+                loss = criterion(output, target)
 
                 loss.backward() #gradients are computed
                 optimizer.step()  #updates the parameters, the function can be called once the gradients are computed using e.g. backward().
@@ -75,7 +76,6 @@ class TrainModel7(Train):
 
                 self.current_loss += loss 
             
-
             self.t_loss = self.test_loss(ae, self.testloader, criterion)
             self.update_loss_tab(iteration)
 
