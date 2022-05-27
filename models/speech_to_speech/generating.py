@@ -1,5 +1,5 @@
 import torch
-import constant
+import constants.constants as constants
 from torch_dataset import TrainSet
 
 
@@ -13,6 +13,6 @@ def generate_motion_2(model, inputs, noise=None):
     with torch.no_grad():
         outs = model.forward(inputs).squeeze(1).numpy()
     outs = torch.FloatTensor(outs).unsqueeze(1)
-    outs = torch.reshape(outs, (-1, constant.pose_size + constant.au_size))
+    outs = torch.reshape(outs, (-1, constants.pose_size + constants.au_size))
     outs = dset.rescale_y(outs)
     return outs

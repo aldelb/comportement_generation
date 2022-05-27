@@ -2,7 +2,7 @@ from logging import exception
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import constant
+import constants.constants as constants
 import contextlib
 from torchsummary import summary
 from utils.model_parts import DoubleConv, Down, OutConv, Up
@@ -12,9 +12,9 @@ def write_model_4(file_path, model, D):
     with open(file_path, "a") as o:
         with contextlib.redirect_stdout(o):
             o.write("-"*10 + "Generateur" + "-"*10 + "\n")
-            summary(model, (constant.prosody_size, 300), batch_size = constant.batch_size)
+            summary(model, (constants.prosody_size, 300), batch_size = constants.batch_size)
             o.write("-"*10 + "Discriminateur" + "-"*10 + "\n")
-            summary(D, [(constant.pose_size + constant.au_size, 300), (constant.prosody_size, 300)], batch_size = constant.batch_size)
+            summary(D, [(constants.pose_size + constants.au_size, 300), (constants.prosody_size, 300)], batch_size = constants.batch_size)
     o.close() 
 
 class AutoEncoder(nn.Module):
@@ -23,48 +23,48 @@ class AutoEncoder(nn.Module):
         bilinear = True
         factor = 2 if bilinear else 1
         ##Encoder
-        self.inc = DoubleConv(constant.prosody_size, 64, constant.first_kernel_size, constant.first_padding_size)
-        self.down1 = Down(64, 128, constant.kernel_size, constant.padding_size)
-        self.down2 = Down(128, 256, constant.kernel_size, constant.padding_size)
-        self.down3 = Down(256, 512, constant.kernel_size, constant.padding_size)
-        self.down4 = Down(512, 1024 // factor, constant.kernel_size, constant.padding_size)
+        self.inc = DoubleConv(constants.prosody_size, 64, constants.first_kernel_size, constants.first_padding_size)
+        self.down1 = Down(64, 128, constants.kernel_size, constants.padding_size)
+        self.down2 = Down(128, 256, constants.kernel_size, constants.padding_size)
+        self.down3 = Down(256, 512, constants.kernel_size, constants.padding_size)
+        self.down4 = Down(512, 1024 // factor, constants.kernel_size, constants.padding_size)
 
         ##Decoder eye
-        self.up1_eye = Up(1024, 512 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up2_eye = Up(512, 256 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up3_eye = Up(256, 128 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up4_eye = Up(128, 64, constant.kernel_size, constant.padding_size, bilinear)
-        self.outc_eye = OutConv(64, constant.eye_size, constant.kernel_size, constant.padding_size)
+        self.up1_eye = Up(1024, 512 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up2_eye = Up(512, 256 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up3_eye = Up(256, 128 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up4_eye = Up(128, 64, constants.kernel_size, constants.padding_size, bilinear)
+        self.outc_eye = OutConv(64, constants.eye_size, constants.kernel_size, constants.padding_size)
 
 
         ##Decoder pose_t
-        self.up1_pose_t = Up(1024, 512 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up2_pose_t = Up(512, 256 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up3_pose_t = Up(256, 128 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up4_pose_t = Up(128, 64, constant.kernel_size, constant.padding_size, bilinear)
-        self.outc_pose_t = OutConv(64, constant.pose_t_size, constant.kernel_size, constant.padding_size)
+        self.up1_pose_t = Up(1024, 512 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up2_pose_t = Up(512, 256 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up3_pose_t = Up(256, 128 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up4_pose_t = Up(128, 64, constants.kernel_size, constants.padding_size, bilinear)
+        self.outc_pose_t = OutConv(64, constants.pose_t_size, constants.kernel_size, constants.padding_size)
 
 
         ##Decoder pose_r
-        self.up1_pose_r = Up(1024, 512 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up2_pose_r = Up(512, 256 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up3_pose_r = Up(256, 128 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up4_pose_r = Up(128, 64, constant.kernel_size, constant.padding_size, bilinear)
-        self.outc_pose_r = OutConv(64, constant.pose_r_size, constant.kernel_size, constant.padding_size)
+        self.up1_pose_r = Up(1024, 512 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up2_pose_r = Up(512, 256 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up3_pose_r = Up(256, 128 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up4_pose_r = Up(128, 64, constants.kernel_size, constants.padding_size, bilinear)
+        self.outc_pose_r = OutConv(64, constants.pose_r_size, constants.kernel_size, constants.padding_size)
 
         ##Decoder AUs
-        self.up1_au = Up(1024, 512 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up2_au = Up(512, 256 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up3_au = Up(256, 128 // factor, constant.kernel_size, constant.padding_size, bilinear)
-        self.up4_au = Up(128, 64, constant.kernel_size, constant.padding_size, bilinear)
-        self.outc_au = OutConv(64, constant.au_size, constant.kernel_size, constant.padding_size)
+        self.up1_au = Up(1024, 512 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up2_au = Up(512, 256 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up3_au = Up(256, 128 // factor, constants.kernel_size, constants.padding_size, bilinear)
+        self.up4_au = Up(128, 64, constants.kernel_size, constants.padding_size, bilinear)
+        self.outc_au = OutConv(64, constants.au_size, constants.kernel_size, constants.padding_size)
 
         ##Discriminator
-        self.inc_discr = DoubleConv(constant.prosody_size + constant.pose_size + constant.au_size, 64, constant.kernel_size, constant.padding_size)
-        self.down1_discr = Down(64, 128, constant.kernel_size, constant.padding_size)
-        self.down2_discr = Down(128, 256, constant.kernel_size, constant.padding_size)
-        self.down3_discr = Down(256, 512, constant.kernel_size, constant.padding_size)
-        self.linear = nn.Linear(37, constant.pose_size + constant.au_size)
+        self.inc_discr = DoubleConv(constants.prosody_size + constants.pose_size + constants.au_size, 64, constants.kernel_size, constants.padding_size)
+        self.down1_discr = Down(64, 128, constants.kernel_size, constants.padding_size)
+        self.down2_discr = Down(128, 256, constants.kernel_size, constants.padding_size)
+        self.down3_discr = Down(256, 512, constants.kernel_size, constants.padding_size)
+        self.linear = nn.Linear(37, constants.pose_size + constants.au_size)
 
 
 class Generator(AutoEncoder):

@@ -7,11 +7,11 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import KernelDensity
 from sklearn.model_selection import GridSearchCV
-import constant
+import constants.constants as constants
+from constants.constants_utils import read_params
 from torch_dataset import TestSet
 from utils.model_utils import find_model
 
-from utils.params_utils import read_params
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
@@ -87,11 +87,11 @@ if __name__ == "__main__":
 
     model_file = find_model(int(args.epoch)) 
 
-    path_data_out = constant.dir_path + constant.output_path + model_file[0:-3] + "/"
+    path_data_out = constants.dir_path + constants.output_path + model_file[0:-3] + "/"
     if(not isdir(path_data_out)):
         raise Exception(path_data_out + "is not a directory")
 
-    path_evaluation = constant.dir_path + constant.evaluation_path + model_file[0:-3] + "/"
+    path_evaluation = constants.dir_path + constants.evaluation_path + model_file[0:-3] + "/"
     if(not isdir(path_evaluation)):
         os.makedirs(path_evaluation, exist_ok=True)
 

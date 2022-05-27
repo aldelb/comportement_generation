@@ -5,7 +5,7 @@ from torch_dataset import TestSet, TrainSet
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistAllLossEpoch, plotHistLossEpochGAN, plotHistPredEpochGAN
-import constant
+import constants.constants as constants
 import torch.nn as nn
 import torch
 from torch.autograd import Variable
@@ -59,11 +59,11 @@ class TrainModel4(Train):
         G = Generator().to(device)
         D = Discriminator().to(device)
 
-        g_opt = torch.optim.Adam(G.parameters(), lr=constant.g_lr)
-        d_opt = torch.optim.Adam(D.parameters(), lr=constant.d_lr)
+        g_opt = torch.optim.Adam(G.parameters(), lr=constants.g_lr)
+        d_opt = torch.optim.Adam(D.parameters(), lr=constants.d_lr)
 
         print("Saving params...")
-        save_params(constant.saved_path, G, D)
+        save_params(constants.saved_path, G, D)
 
 
         ####Tensorboard visualisation#########
@@ -103,7 +103,7 @@ class TrainModel4(Train):
                 # * Train D :  maximize log(D(x)) + log(1 - D(G(z)))
                 print("** Train the discriminator")
                 d_opt.zero_grad()
-                real_logit = D(targets.float(), inputs) #produce a result for each frame (tensor of length 300)
+                real_logit = D(targets, inputs) #produce a result for each frame (tensor of length 300)
                 fake_logit = D(fake_targets, inputs)
 
                 #discriminator prediction
@@ -123,15 +123,15 @@ class TrainModel4(Train):
 
                 self.current_d_loss += d_loss
 
-                if constant.unroll_steps:
+                if constants.unroll_steps:
                     print("** Unroll D to reduce mode collapse")
                     # * Unroll D to reduce mode collapse
                     d_backup = D.state_dict() #a Python dictionary object that maps each layer to its parameter tensor.
-                    for _ in range(constant.unroll_steps):
+                    for _ in range(constants.unroll_steps):
                         # * Train D
                         d_opt.zero_grad()
 
-                        real_logit = D(targets.float(), inputs)
+                        real_logit = D(targets, inputs)
                         fake_logit = D(fake_targets, inputs)
 
                         real_label = torch.ones_like(real_logit)
@@ -162,7 +162,7 @@ class TrainModel4(Train):
                 g_loss.backward()
                 g_opt.step()
 
-                if constant.unroll_steps:
+                if constants.unroll_steps:
                     D.load_state_dict(d_backup)
 
                 self.current_loss_eye += loss_eye
@@ -177,9 +177,9 @@ class TrainModel4(Train):
 
             print('[ %d ] loss : %.4f %.4f' % (epoch+1, self.current_loss, self.t_loss))
 
-            if epoch % constant.log_interval == 0 or epoch >= self.n_epochs - 1:
+            if epoch % constants.log_interval == 0 or epoch >= self.n_epochs - 1:
                 print("saving...")
-                saveModel(G, epoch, constant.saved_path)
+                saveModel(G, epoch, constants.saved_path)
                 plotHistLossEpochGAN(epoch, self.d_loss_tab, self.loss_tab, self.t_loss_tab)
                 plotHistPredEpochGAN(epoch, self.d_real_pred_tab, self.d_fake_pred_tab)
                 plotHistAllLossEpoch(epoch, self.loss_tab_eye, self.loss_tab_pose_t, self.loss_tab_pose_r, self.loss_tab_au, self.loss_tab)

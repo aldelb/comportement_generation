@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-import constant
+import constants.constants as constants
 from matplotlib.ticker import MaxNLocator
 
 def plotHistLossEpoch(num_epoch, loss, t_loss=None):
@@ -12,7 +12,7 @@ def plotHistLossEpoch(num_epoch, loss, t_loss=None):
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Loss")
     ax1.legend()
-    plt.savefig(constant.saved_path+f'loss_epoch_{num_epoch}.png')
+    plt.savefig(constants.saved_path+f'loss_epoch_{num_epoch}.png')
     plt.close()
 
 def plotHistAllLossEpoch(num_epoch, loss_eye, loss_pose_t, loss_pose_r, loss_au, loss):
@@ -27,7 +27,7 @@ def plotHistAllLossEpoch(num_epoch, loss_eye, loss_pose_t, loss_pose_r, loss_au,
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Loss")
     ax1.legend()
-    plt.savefig(constant.saved_path+f'all_loss_epoch_{num_epoch}.png')
+    plt.savefig(constants.saved_path+f'all_loss_epoch_{num_epoch}.png')
     plt.close()
 
 def plotHistLossEpochGAN(num_epoch, d_loss, t_loss, g_loss=None):
@@ -41,7 +41,7 @@ def plotHistLossEpochGAN(num_epoch, d_loss, t_loss, g_loss=None):
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Loss")
     ax1.legend()
-    plt.savefig(constant.saved_path+f'loss_epoch_{num_epoch}.png')
+    plt.savefig(constants.saved_path+f'loss_epoch_{num_epoch}.png')
     plt.close()
 
 
@@ -54,5 +54,5 @@ def plotHistPredEpochGAN(num_epoch, d_real_pred, d_fake_pred):
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Label")
     ax1.legend()
-    plt.savefig(constant.saved_path+f'pred_epoch_{num_epoch}.png')
+    plt.savefig(constants.saved_path+f'pred_epoch_{num_epoch}.png')
     plt.close()

@@ -6,7 +6,7 @@ from torch_dataset import TestSet, TrainSet
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistLossEpochGAN, plotHistPredEpochGAN
-import constant
+import constants.constants as constants
 import torch.nn as nn
 import torch
 from torch.autograd import Variable
@@ -34,7 +34,7 @@ def test_loss(G, D, testloader, criterion_loss):
         target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))
 
         real_batch_size = input.shape[0]
-        noise = torch.Tensor(sample_noise(real_batch_size, constant.noise_size)).unsqueeze(1).to(device)
+        noise = torch.Tensor(sample_noise(real_batch_size, constants.noise_size)).unsqueeze(1).to(device)
 
         output = G(input.float(), noise)
         gen_logit = D(output, input.float())
@@ -51,12 +51,12 @@ def train_model_5():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # --- Training params
-    n_epochs =  constant.n_epochs
-    batch_size = constant.batch_size
-    d_lr =  constant.d_lr  # Generator learning rate 
-    g_lr =  constant.g_lr # Discriminator learning rate
-    unroll_steps =  constant.unroll_steps
-    log_interval =  constant.log_interval
+    n_epochs =  constants.n_epochs
+    batch_size = constants.batch_size
+    d_lr =  constants.d_lr  # Generator learning rate 
+    g_lr =  constants.g_lr # Discriminator learning rate
+    unroll_steps =  constants.unroll_steps
+    log_interval =  constants.log_interval
 
     # --- Init dataset
     trainset = TrainSet()
@@ -75,7 +75,7 @@ def train_model_5():
     d_opt = torch.optim.Adam(D.parameters(), lr=d_lr)
 
     print("Saving params...")
-    save_params(constant.saved_path, G, D)
+    save_params(constants.saved_path, G, D)
     
     bce_loss = torch.nn.BCELoss()
 
@@ -104,7 +104,7 @@ def train_model_5():
             real_batch_size = inputs.shape[0]
             # * Generate fake data
             print("** Generate fake data")
-            noise = torch.Tensor(sample_noise(real_batch_size, constant.noise_size)).unsqueeze(1).to(device)
+            noise = torch.Tensor(sample_noise(real_batch_size, constants.noise_size)).unsqueeze(1).to(device)
             with torch.no_grad():
                 fake_targets = G(inputs.float(), noise) #le générateur génére les fausses données conditionnellement à la prosodie
             print("fake targer shape ", fake_targets.shape)
@@ -155,7 +155,7 @@ def train_model_5():
             # * Train G
             print("** Train the generator")
             g_opt.zero_grad()
-            noise = torch.Tensor(sample_noise(real_batch_size, constant.noise_size)).unsqueeze(1).to(device)
+            noise = torch.Tensor(sample_noise(real_batch_size, constants.noise_size)).unsqueeze(1).to(device)
             gen_y = G(inputs.float(), noise)
             gen_logit = D(gen_y, inputs.float())
             gen_lable = torch.ones_like(gen_logit)
@@ -190,7 +190,7 @@ def train_model_5():
         t_loss_tab.append(t_loss)
         if epoch % log_interval == 0 or epoch >= n_epochs - 1:
             print("saving...")
-            saveModel(G, epoch, constant.saved_path)
+            saveModel(G, epoch, constants.saved_path)
             plotHistLossEpochGAN(epoch, d_loss_tab, g_loss_tab, t_loss_tab)
             plotHistPredEpochGAN(epoch, d_real_pred_tab, d_fake_pred_tab)
 

@@ -40,3 +40,10 @@ opensmile_columns = []
 selected_opensmile_columns = []
 selected_os_index_columns = []
 openface_columns = []
+
+#Model function
+model = None
+write_model = None
+train_model = None
+generate_motion = None
+

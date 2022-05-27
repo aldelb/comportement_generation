@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
-import constant
+import constants.constants as constants
 from models.TrainClass import Train
 from models.model2_skip_connectivity.model import AutoEncoder
 from utils.model_utils import saveModel
@@ -36,9 +36,9 @@ class TrainModel2(Train):
         print("Launching of model 2 : simple auto encoder with skip connectivity")
         print("Saving params...")
         ae = AutoEncoder()
-        optimizer = optim.Adam(ae.parameters(),lr=constant.g_lr)
+        optimizer = optim.Adam(ae.parameters(),lr=constants.g_lr)
         criterion = nn.MSELoss()
-        save_params(constant.saved_path, ae)
+        save_params(constants.saved_path, ae)
 
         print("Starting Training Loop...")
         for epoch in range(0, self.n_epochs):
@@ -77,11 +77,11 @@ class TrainModel2(Train):
 
             print ('[ %d ] loss : %.4f - t_loss : %.4f'% (epoch+1, self.current_loss, self.t_loss))
 
-            if epoch % constant.log_interval == 0 or epoch >= self.n_epochs - 1:
+            if epoch % constants.log_interval == 0 or epoch >= self.n_epochs - 1:
                 print("saving...")
                 plotHistLossEpoch(epoch, self.loss_tab, self.t_loss_tab)
                 plotHistAllLossEpoch(epoch, self.loss_tab_eye, self.loss_tab_pose_t, self.loss_tab_pose_r, self.loss_tab_au, self.loss_tab)
-                saveModel(ae, epoch, constant.saved_path)
+                saveModel(ae, epoch, constants.saved_path)
             
             end_epoch = datetime.now()   
             diff = end_epoch - start_epoch

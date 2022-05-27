@@ -2,7 +2,7 @@ from logging import exception
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import constant
+import constants.constants as constants
 import contextlib
 from torchsummary import summary
 
@@ -12,7 +12,7 @@ def write_model_5(file_path, model, D):
 
 def conv_bn_relu(in_channels, out_channels):
     return nn.Sequential(
-        nn.Conv1d(in_channels, out_channels, constant.kernel_size, padding = constant.padding_size, bias=True),
+        nn.Conv1d(in_channels, out_channels, constants.kernel_size, padding = constants.padding_size, bias=True),
         nn.BatchNorm1d(out_channels),
         nn.ReLU(inplace=True),
     )   
@@ -21,11 +21,11 @@ class Model(nn.Module):
     def __init__(self, h_size, o_size):
         super(Model, self).__init__()
 
-        if(constant.layer == "LSTM"):
-            self.layer = nn.LSTM(input_size = h_size, hidden_size = h_size, num_layers=2, bidirectional=True, dropout=constant.dropout)
+        if(constants.layer == "LSTM"):
+            self.layer = nn.LSTM(input_size = h_size, hidden_size = h_size, num_layers=2, bidirectional=True, dropout=constants.dropout)
             self.o_fc = nn.Linear(2 * h_size, o_size)
-        elif(constant.layer == "GRU"):
-            self.layer = nn.GRU(input_size = h_size, hidden_size = h_size, num_layers=2, bidirectional=True, dropout=constant.dropout)
+        elif(constants.layer == "GRU"):
+            self.layer = nn.GRU(input_size = h_size, hidden_size = h_size, num_layers=2, bidirectional=True, dropout=constants.dropout)
             self.o_fc = nn.Linear(2 * h_size, o_size)
         else: #CONV
             self.layer1 = conv_bn_relu(h_size, int(h_size/2))
@@ -33,7 +33,7 @@ class Model(nn.Module):
             self.o_fc = nn.Linear(int(h_size/2), o_size)
 
     def applyLayer(self, x):
-        if(constant.layer == "LSTM" or constant.layer == "GRU"):
+        if(constants.layer == "LSTM" or constants.layer == "GRU"):
             x = torch.reshape(x, (x.shape[2], x.shape[0], x.shape[1]))
             return self.layer(x)[0]
         else: #CONV
@@ -48,12 +48,12 @@ class Model(nn.Module):
 class Generator(Model):
 
     def __init__(self):
-        super(Generator, self).__init__(constant.hidden_size, constant.pose_size + constant.au_size)
+        super(Generator, self).__init__(constants.hidden_size, constants.pose_size + constants.au_size)
 
-        self.h_size = constant.hidden_size
-        self.i_size = constant.prosody_size #prosody size
-        self.n_size = constant.noise_size #noise size
-        self.o_size = constant.pose_size + constant.au_size #openface size
+        self.h_size = constants.hidden_size
+        self.i_size = constants.prosody_size #prosody size
+        self.n_size = constants.noise_size #noise size
+        self.o_size = constants.pose_size + constants.au_size #openface size
 
         self.i_fc = nn.Linear(self.i_size, int(self.h_size/2)) #apply linear transformation to incoming data (with additive bias)
         self.n_fc = nn.Linear(self.n_size, int(self.h_size/2))
@@ -82,11 +82,11 @@ class Discriminator(Model):
 
     def __init__(self):
 
-        super(Discriminator, self).__init__(constant.hidden_size, 1)
+        super(Discriminator, self).__init__(constants.hidden_size, 1)
 
-        self.i_size = constant.pose_size + constant.au_size
-        self.c_size = constant.prosody_size
-        self.h_size = constant.hidden_size
+        self.i_size = constants.pose_size + constants.au_size
+        self.c_size = constants.prosody_size
+        self.h_size = constants.hidden_size
 
         self.i_fc = nn.Linear(self.i_size, int(self.h_size/2))
         self.c_fc = nn.Linear(self.c_size, int(self.h_size/2))

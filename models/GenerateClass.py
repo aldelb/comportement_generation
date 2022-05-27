@@ -1,5 +1,5 @@
 import torch
-import constant
+import constants.constants as constants
 from torch_dataset import TrainSet
 
 class Generate():
@@ -18,26 +18,24 @@ class Generate():
         inputs = torch.reshape(inputs, (-1, inputs.shape[2], inputs.shape[0]))
         return inputs
 
+    def separate_openface_features(self, input, dim):
+        input_eye = torch.index_select(input, dim, torch.tensor(range(constants.eye_size)))
+        input_pose_t = torch.index_select(input, dim, torch.tensor(range(constants.eye_size, constants.eye_size + constants.pose_t_size)))
+        input_pose_r = torch.index_select(input, dim, torch.tensor(range(constants.eye_size + constants.pose_t_size, constants.eye_size + constants.pose_t_size + constants.pose_r_size)))
+        input_au = torch.index_select(input, dim, torch.tensor(range(constants.pose_size, constants.pose_size + constants.au_size)))
+
+        return input_eye, input_pose_t, input_pose_r, input_au
+    
+
     def reshape_output(self, output_eye, output_pose_t, output_pose_r, output_au):
-        output_eye = torch.FloatTensor(output_eye)
-        output_eye = torch.reshape(output_eye, (-1, constant.eye_size))
-
-        output_pose_t = torch.FloatTensor(output_pose_t)
-        output_pose_t = torch.reshape(output_pose_t, (-1, constant.pose_t_size))
-
-        output_pose_r = torch.FloatTensor(output_pose_r)
-        output_pose_r = torch.reshape(output_pose_r, (-1, constant.pose_r_size))
-
-        output_au = torch.FloatTensor(output_au)
-        output_au = torch.reshape(output_au, (-1, constant.au_size))
-        
         outs = torch.cat((output_eye, output_pose_t, output_pose_r, output_au), 1)
+        outs = torch.FloatTensor(outs)
+        outs = torch.reshape(outs, (-1, constants.pose_size + constants.au_size))
         outs = self.dset.rescale_y(outs)
-
         return outs
     
     def reshape_single_output(self, outs):
         outs = torch.FloatTensor(outs)
-        outs = torch.reshape(outs, (-1, constant.pose_size + constant.au_size))
+        outs = torch.reshape(outs, (-1, constants.pose_size + constants.au_size))
         outs = self.dset.rescale_y(outs)
         return outs

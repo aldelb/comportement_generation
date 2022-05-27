@@ -1,13 +1,13 @@
 import torch
-import constant
+import constants.constants as constants
 from torch_dataset import TestSet, TrainSet
 from torch.autograd import Variable
 
 class Train():
     def __init__(self, gan=False):
         self.gan = gan
-        self.batchsize = constant.batch_size
-        self.n_epochs = constant.n_epochs
+        self.batchsize = constants.batch_size
+        self.n_epochs = constants.n_epochs
 
         trainset = TrainSet()
         trainset.scaling(True)
@@ -89,10 +89,10 @@ class Train():
         return input.float(), target_eye.float(), target_pose_t.float(), target_pose_r.float(), target_au.float()
 
     def separate_openface_features(self, output, dim):
-        output_eye = torch.index_select(output, dim, torch.tensor(range(constant.eye_size)))
-        output_pose_t = torch.index_select(output, dim, torch.tensor(range(constant.eye_size, constant.eye_size + constant.pose_t_size)))
-        output_pose_r = torch.index_select(output, dim, torch.tensor(range(constant.eye_size + constant.pose_t_size, constant.eye_size + constant.pose_t_size + constant.pose_r_size)))
-        output_au = torch.index_select(output, dim, torch.tensor(range(constant.pose_size, constant.pose_size + constant.au_size)))
+        output_eye = torch.index_select(output, dim, torch.tensor(range(constants.eye_size)))
+        output_pose_t = torch.index_select(output, dim, torch.tensor(range(constants.eye_size, constants.eye_size + constants.pose_t_size)))
+        output_pose_r = torch.index_select(output, dim, torch.tensor(range(constants.eye_size + constants.pose_t_size, constants.eye_size + constants.pose_t_size + constants.pose_r_size)))
+        output_au = torch.index_select(output, dim, torch.tensor(range(constants.pose_size, constants.pose_size + constants.au_size)))
 
         return output_eye, output_pose_t, output_pose_r, output_au
     

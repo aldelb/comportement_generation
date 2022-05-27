@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
-import constant
+import constants.constants as constants
 from models.speech_to_speech.model import AutoEncoder
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
@@ -32,8 +32,8 @@ def test_loss(ae, testloader, criterion):
 def train_model_speech_to_speech():
     print("Launching of model speech to speech")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    batchsize = constant.batch_size
-    n_epochs = constant.n_epochs
+    batchsize = constants.batch_size
+    n_epochs = constants.n_epochs
 
     trainset = TrainSet()
     trainset.scaling(True)
@@ -46,9 +46,9 @@ def train_model_speech_to_speech():
     
     print("Saving params...")
     ae = AutoEncoder()
-    optimizer = optim.Adam(ae.parameters(),lr=constant.g_lr)
+    optimizer = optim.Adam(ae.parameters(),lr=constants.g_lr)
     criterion = nn.MSELoss()
-    save_params(constant.saved_path, ae)
+    save_params(constants.saved_path, ae)
     
     loss_tab = []
     t_loss_tab = []
@@ -82,10 +82,10 @@ def train_model_speech_to_speech():
 
         print ('[ %d ] loss : %.4f - t_loss : %.4f'% (epoch+1, current_loss, t_loss))
 
-        if epoch % constant.log_interval == 0 or epoch >= n_epochs - 1:
+        if epoch % constants.log_interval == 0 or epoch >= n_epochs - 1:
             print("saving...")
             plotHistLossEpoch(epoch, loss_tab, t_loss_tab)
-            saveModel(ae, epoch, constant.saved_path)
+            saveModel(ae, epoch, constants.saved_path)
         
         end_epoch = datetime.now()   
         diff = end_epoch - start_epoch

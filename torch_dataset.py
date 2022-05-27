@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 from torch.utils.data import Dataset
 from sklearn.preprocessing import MinMaxScaler
-import constant
+import constants.constants as constants
 import librosa
 import sys
 
@@ -10,8 +10,8 @@ class Set(Dataset):
 
     def __init__(self, setType = "train"):
         # Load data
-        path = constant.data_path
-        datasets = constant.datasets
+        path = constants.data_path
+        datasets = constants.datasets
         X = []
         Y = []
         interval = []
@@ -21,12 +21,12 @@ class Set(Dataset):
             with open(path +'X_'+setType+'_'+set_name+'.p', 'rb') as f:
                 x = pickle.load(f)
             for item in x:
-                current_X.append(item[:,np.r_[constant.selected_os_index_columns]])
+                current_X.append(item[:,np.r_[constants.selected_os_index_columns]])
             current_X = np.array(current_X)
 
-            if(len(constant.selected_os_index_columns) == 1):
+            if(len(constants.selected_os_index_columns) == 1):
                 current_X = np.reshape(current_X, current_X.shape + (1,))
-            if constant.derivative:
+            if constants.derivative:
                 current_X = self.addDerevative(current_X)
 
             with open(path +'y_'+setType+'_'+set_name+'.p', 'rb') as f:
