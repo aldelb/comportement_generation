@@ -5,9 +5,9 @@ from torch_dataset import TrainSet
 
 
 
-class GenerateModel10(Generate):
+class GenerateModel11(Generate):
     def __init__(self):
-        super(GenerateModel10, self).__init__()
+        super(GenerateModel11, self).__init__()
 
     def generate_motion(self, model, inputs, targets):
         inputs = self.reshape_input(inputs)

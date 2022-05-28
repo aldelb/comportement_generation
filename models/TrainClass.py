@@ -23,7 +23,6 @@ class Train():
 
     def reinitialize_loss_tab(self):
         self.loss_tab_eye = []
-        self.loss_tab_pose_t = []
         self.loss_tab_pose_r = []
         self.loss_tab_au = []
         self.loss_tab = []
@@ -38,9 +37,6 @@ class Train():
     def update_loss_tab(self, iteration):
         self.current_loss_eye = self.current_loss_eye/(iteration + 1)
         self.loss_tab_eye.append(self.current_loss_eye.cpu().detach().numpy())
-
-        self.current_loss_pose_t = self.current_loss_pose_t/(iteration + 1)
-        self.loss_tab_pose_t.append(self.current_loss_pose_t.cpu().detach().numpy())
 
         self.current_loss_pose_r = self.current_loss_pose_r/(iteration + 1)
         self.loss_tab_pose_r.append(self.current_loss_pose_r.cpu().detach().numpy())
@@ -69,7 +65,6 @@ class Train():
 
     def reinitialize_loss(self):
         self.current_loss_eye = 0
-        self.current_loss_pose_t = 0
         self.current_loss_pose_r = 0
         self.current_loss_au = 0
         self.current_loss = 0
@@ -84,15 +79,14 @@ class Train():
         input, target = Variable(input), Variable(target)
         input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
         target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))
-        target_eye, target_pose_t, target_pose_r, target_au = self.separate_openface_features(target, dim=1)
+        target_eye, target_pose_r, target_au = self.separate_openface_features(target, dim=1)
 
-        return input.float(), target_eye.float(), target_pose_t.float(), target_pose_r.float(), target_au.float()
+        return input.float(), target_eye.float(), target_pose_r.float(), target_au.float()
 
     def separate_openface_features(self, output, dim):
         output_eye = torch.index_select(output, dim, torch.tensor(range(constants.eye_size)))
-        output_pose_t = torch.index_select(output, dim, torch.tensor(range(constants.eye_size, constants.eye_size + constants.pose_t_size)))
-        output_pose_r = torch.index_select(output, dim, torch.tensor(range(constants.eye_size + constants.pose_t_size, constants.eye_size + constants.pose_t_size + constants.pose_r_size)))
+        output_pose_r = torch.index_select(output, dim, torch.tensor(range(constants.eye_size, constants.eye_size + constants.pose_r_size)))
         output_au = torch.index_select(output, dim, torch.tensor(range(constants.pose_size, constants.pose_size + constants.au_size)))
 
-        return output_eye, output_pose_t, output_pose_r, output_au
+        return output_eye, output_pose_r, output_au
     

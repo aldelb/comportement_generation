@@ -35,15 +35,6 @@ class AutoEncoder(nn.Module):
         self.up4_eye = Up(128, 64, constants.kernel_size, constants.padding_size, bilinear)
         self.outc_eye = OutConv(64, constants.eye_size, constants.kernel_size, constants.padding_size)
 
-
-        ##Decoder pose_t
-        self.up1_pose_t = Up(1024, 512 // factor, constants.kernel_size, constants.padding_size, bilinear)
-        self.up2_pose_t = Up(512, 256 // factor, constants.kernel_size, constants.padding_size, bilinear)
-        self.up3_pose_t = Up(256, 128 // factor, constants.kernel_size, constants.padding_size, bilinear)
-        self.up4_pose_t = Up(128, 64, constants.kernel_size, constants.padding_size, bilinear)
-        self.outc_pose_t = OutConv(64, constants.pose_t_size, constants.kernel_size, constants.padding_size)
-
-
         ##Decoder pose_r
         self.up1_pose_r = Up(1024, 512 // factor, constants.kernel_size, constants.padding_size, bilinear)
         self.up2_pose_r = Up(512, 256 // factor, constants.kernel_size, constants.padding_size, bilinear)
@@ -75,14 +66,6 @@ class AutoEncoder(nn.Module):
         logits_eye = self.outc_eye(x)
         logits_eye = torch.sigmoid(logits_eye)
 
-        #Decoder pose_t
-        x = self.up1_pose_t(x5, x4)
-        x = self.up2_pose_t(x, x3)
-        x = self.up3_pose_t(x, x2)
-        x = self.up4_pose_t(x, x1)
-        logits_pose_t = self.outc_pose_t(x)
-        logits_pose_t = torch.sigmoid(logits_pose_t)
-
         #Decoder pose_r
         x = self.up1_pose_r(x5, x4)
         x = self.up2_pose_r(x, x3)
@@ -99,4 +82,4 @@ class AutoEncoder(nn.Module):
         logits_au = self.outc_au(x)
         logits_au = torch.sigmoid(logits_au)
         
-        return logits_eye, logits_pose_t, logits_pose_r, logits_au
+        return logits_eye, logits_pose_r, logits_au

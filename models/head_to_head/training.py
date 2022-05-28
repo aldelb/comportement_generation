@@ -18,7 +18,7 @@ class TrainModel9(Train):
         for iteration, data in enumerate(testloader, 0):
             _, target = data
             input = target
-            input, target_eye, target_pose_t, target_pose_r, target_au = self.format_data(input, target)
+            input, target_eye, target_pose_r, target_au = self.format_data(input, target)
             _, _, input, _ = self.separate_openface_features(input, dim=1)
             output_pose_r = ae(input)
             loss_pose_r = criterion_pose(output_pose_r, target_pose_r)
@@ -56,7 +56,7 @@ class TrainModel9(Train):
                 print("*"+f"Starting iteration {iteration + 1}/{self.n_iteration_per_epoch}...")
                 _, target = data
                 input = target
-                input, target_eye, target_pose_t, target_pose_r, target_au = self.format_data(input, target)
+                input, target_eye, target_pose_r, target_au = self.format_data(input, target)
                 _, _, input, _ = self.separate_openface_features(input, dim=1)
                 
                 optimizer.zero_grad()

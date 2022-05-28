@@ -20,15 +20,14 @@ class Generate():
 
     def separate_openface_features(self, input, dim):
         input_eye = torch.index_select(input, dim, torch.tensor(range(constants.eye_size)))
-        input_pose_t = torch.index_select(input, dim, torch.tensor(range(constants.eye_size, constants.eye_size + constants.pose_t_size)))
-        input_pose_r = torch.index_select(input, dim, torch.tensor(range(constants.eye_size + constants.pose_t_size, constants.eye_size + constants.pose_t_size + constants.pose_r_size)))
+        input_pose_r = torch.index_select(input, dim, torch.tensor(range(constants.eye_size, constants.eye_size + constants.pose_r_size)))
         input_au = torch.index_select(input, dim, torch.tensor(range(constants.pose_size, constants.pose_size + constants.au_size)))
 
-        return input_eye, input_pose_t, input_pose_r, input_au
+        return input_eye, input_pose_r, input_au
     
 
-    def reshape_output(self, output_eye, output_pose_t, output_pose_r, output_au):
-        outs = torch.cat((output_eye, output_pose_t, output_pose_r, output_au), 1)
+    def reshape_output(self, output_eye, output_pose_r, output_au):
+        outs = torch.cat((output_eye, output_pose_r, output_au), 1)
         outs = torch.FloatTensor(outs)
         outs = torch.reshape(outs, (-1, constants.pose_size + constants.au_size))
         outs = self.dset.rescale_y(outs)

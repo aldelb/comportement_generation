@@ -9,6 +9,11 @@ from utils.model_utils import find_model, load_model
 from torch_dataset import TestSet
 import pandas as pd
 
+gaze_columns = ["gaze_0_x", "gaze_0_y", "gaze_0_z", "gaze_1_x", "gaze_1_y", "gaze_1_z", "gaze_angle_x", "gaze_angle_y"]
+translation_columns = ["pose_Tx", "pose_Ty", "pose_Tz"]
+au_columns = ["pose_Rx", "pose_Ry", "pose_Rz", "AU01_r", "AU02_r", "AU04_r", "AU05_r", "AU06_r", "AU07_r", "AU09_r", "AU10_r", "AU12_r", "AU14_r", "AU15_r", "AU17_r", "AU20_r", "AU23_r", "AU25_r", "AU26_r", "AU45_r"]
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-params', help='Path to the constant file', default="./params.cfg")
@@ -38,9 +43,6 @@ if __name__ == "__main__":
         input, target = data
         if(constants.model_number in [7,8,9]):
             input = target
-        if(constants.model_number in [10]):
-            input[0] = input
-            input[1] = target
         key = test_set.getInterval(index)[0]
         if(args.video == "all" or key == args.video + "[0]"):
             if(current_key != key): #process of a new video
@@ -54,9 +56,13 @@ if __name__ == "__main__":
             if(constants.prosody_size == 1):
                 input = np.reshape(input, input.shape + (1,))
 
-            out = constants.generate_motion(model, input)
+            if(constants.model_number in [10, 11]):
+                out = constants.generate_motion(model, input, target)
+            else:
+                out = constants.generate_motion(model, input)
+            #add timestamp and head translation for greta
             timestamp = np.array(test_set.getInterval(index)[1][:,0])
-            out = np.concatenate((timestamp.reshape(-1,1), out), axis=1)
+            out = np.concatenate((timestamp.reshape(-1,1), out[:,:constants.eye_size], np.zeros((out.shape[0], 3)), out[:,constants.eye_size:]), axis=1)
             df = pd.DataFrame(data = out, columns = columns)
             df_list.append(df)
             current_part += 1

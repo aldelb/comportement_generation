@@ -23,7 +23,7 @@ class TrainModel10(Train):
         total_loss = 0
         for iteration, data in enumerate(testloader, 0):
             input, target = data
-            input, target_eye, target_pose_t, target_pose_r, target_au = self.format_data(input, target)
+            input, target_eye, target_pose_r, target_au = self.format_data(input, target)
             output_pose_r = ae(input)
 
             loss_pose_r = criterion_pose(output_pose_r, target_pose_r.float())
@@ -61,7 +61,7 @@ class TrainModel10(Train):
             for iteration, data in enumerate(self.trainloader, 0):
                 print("*"+f"Starting iteration {iteration + 1}/{self.n_iteration_per_epoch}...")
                 input, target = data
-                input, target_eye, target_pose_t, target_pose_r, target_au = self.format_data(input, target)
+                input, target_eye, target_pose_r, target_au = self.format_data(input, target)
 
                 optimizer.zero_grad()
 

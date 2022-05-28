@@ -6,9 +6,6 @@ from datetime import date
 from models.head_to_head.generating import GenerateModel9
 from models.head_to_head.model import write_model_9
 from models.head_to_head.training import TrainModel9
-from models.model1_simple_autoencoder.generating import generate_motion_1
-from models.model1_simple_autoencoder.model import write_model_1
-from models.model1_simple_autoencoder.training import train_model_1
 from models.model2_skip_connectivity.generating import GenerateModel2
 from models.model2_skip_connectivity.model import write_model_2
 from models.model2_skip_connectivity.training import TrainModel2
@@ -30,9 +27,11 @@ from models.pose_to_pose_multiple_decoders.training import TrainModel8
 from models.speech_to_head.generating import GenerateModel10
 from models.speech_to_head.model import write_model_10
 from models.speech_to_head.training import TrainModel10
+from models.speech_to_head_GAN.generating import GenerateModel11
+from models.speech_to_head_GAN.model import write_model_11
+from models.speech_to_head_GAN.training import TrainModel11
 from models.speech_to_speech.model import write_model_6
 from models.speech_to_speech.training import train_model_speech_to_speech
-from models.model1_simple_autoencoder.model import AutoEncoder as model1
 from models.model2_skip_connectivity.model import AutoEncoder as model2
 from models.model3_multiple_decoders.model import AutoEncoder as model3
 from models.model4_GAN_autoencoders.model import Generator as model4
@@ -42,6 +41,7 @@ from models.pose_to_pose.model import AutoEncoder as model7
 from models.pose_to_pose_multiple_decoders.model import AutoEncoder as model8
 from models.head_to_head.model import AutoEncoder as model9
 from models.speech_to_head.model import AutoEncoder as model10
+from models.speech_to_head_GAN.model import Generator as model11
 
 
 config = configparser.RawConfigParser()
@@ -109,15 +109,7 @@ def read_params(file, task="train", id=None):
     set_model_function(constants.model_number, task)
 
 def set_model_function(model_number, task):
-    if(model_number == 1): #simple auto encoder
-        if(task == "train"):
-            constants.write_model = write_model_1
-            constants.train_model = train_model_1()
-        elif(task == "generate"):
-            constants.model = model1
-            constants.generate_motion = generate_motion_1
-
-    elif(model_number == 2): #simple autoencoder with skip connectivity
+    if(model_number == 2): #simple autoencoder with skip connectivity
         if(task == "train"):
             constants.write_model = write_model_2
             train = TrainModel2(gan=False)
@@ -200,6 +192,16 @@ def set_model_function(model_number, task):
         elif(task == "generate"):
             constants.model = model10
             generator = GenerateModel10()
+            constants.generate_motion = generator.generate_motion
+    
+    elif(model_number == 11): #speech to head with GAN
+        if(task == "train"):
+            constants.write_model = write_model_11
+            train = TrainModel11(gan=True)
+            constants.train_model = train.train_model
+        elif(task == "generate"):
+            constants.model = model11
+            generator = GenerateModel11()
             constants.generate_motion = generator.generate_motion
     else:
         raise Exception("Model ", model_number, " does not exist")
