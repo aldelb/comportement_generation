@@ -42,7 +42,7 @@ class Set(Dataset):
         X_concat = np.concatenate(X, axis=0)
         Y_concat = np.concatenate(Y, axis=0)
 
-        x_scaler = MinMaxScaler((0,1)).fit(X_concat)  
+        x_scaler = MinMaxScaler((0,1)).fit(X_concat) 
         y_scaler = MinMaxScaler((0,1)).fit(Y_concat)
         X_scaled = list(map(x_scaler.transform, X))
         Y_scaled = list(map(y_scaler.transform, Y))

@@ -5,9 +5,9 @@ class GenerateModel2(Generate):
     def __init__(self):
         super(GenerateModel2, self).__init__()
 
-    def generate_motion(self, model, inputs):
-        inputs = self.reshape_input(inputs)
+    def generate_motion(self, model, prosody):
+        prosody = self.reshape_prosody(prosody)
         with torch.no_grad():
-            outs = model.forward(inputs)
+            outs = model.forward(prosody)
         outs = self.reshape_single_output(outs)
         return outs

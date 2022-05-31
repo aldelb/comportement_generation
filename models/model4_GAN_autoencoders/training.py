@@ -27,7 +27,7 @@ class TrainModel4(Train):
     def __init__(self, gan):
        super(TrainModel4, self).__init__(gan)
 
-    def test_loss(self, G, D, testloader, criterion_pose, criterion_au, criterion_loss):
+    def test_loss(self, G, D, testloader, criterion_pose, criterion_au, criterion_adv):
         total_loss = 0
         for iteration ,data in enumerate(testloader,0):
             input, target = data
@@ -42,7 +42,7 @@ class TrainModel4(Train):
             loss_pose_r = criterion_pose(gen_pose_r, target_pose_r.float())
             loss_au = criterion_au(gen_au, target_au.float())
 
-            adversarial_loss = criterion_loss(gen_logit, gen_lable)
+            adversarial_loss = constants.adversarial_coeff * criterion_adv(gen_logit, gen_lable)
             
             loss = loss_eye + loss_pose_r + loss_au + adversarial_loss
             total_loss += loss.data
@@ -151,7 +151,7 @@ class TrainModel4(Train):
                 gen_logit = D(gen_y, inputs)
                 gen_lable = torch.ones_like(gen_logit)
 
-                adversarial_loss = bce_loss(gen_logit, gen_lable)
+                adversarial_loss = constants.adversarial_coeff * bce_loss(gen_logit, gen_lable)
                 loss_eye = criterionL2(gen_eye, target_eye)
                 loss_pose_r = criterionL2(gen_pose_r, target_pose_r)
                 loss_au = criterionL2(gen_au, target_au)

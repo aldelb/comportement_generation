@@ -24,6 +24,9 @@ from models.pose_to_pose.training import TrainModel7
 from models.pose_to_pose_multiple_decoders.generating import GenerateModel8
 from models.pose_to_pose_multiple_decoders.model import write_model_8
 from models.pose_to_pose_multiple_decoders.training import TrainModel8
+from models.speech_to_AU.generating import GenerateModel12
+from models.speech_to_AU.model import write_model_12
+from models.speech_to_AU.training import TrainModel12
 from models.speech_to_head.generating import GenerateModel10
 from models.speech_to_head.model import write_model_10
 from models.speech_to_head.training import TrainModel10
@@ -42,6 +45,7 @@ from models.pose_to_pose_multiple_decoders.model import AutoEncoder as model8
 from models.head_to_head.model import AutoEncoder as model9
 from models.speech_to_head.model import AutoEncoder as model10
 from models.speech_to_head_GAN.model import Generator as model11
+from models.speech_to_AU.model import AutoEncoder as model12
 
 
 config = configparser.RawConfigParser()
@@ -79,6 +83,7 @@ def read_params(file, task="train", id=None):
     constants.d_lr =  config.getfloat('TRAIN','d_lr')
     constants.g_lr =  config.getfloat('TRAIN','g_lr')
     constants.log_interval =  config.getint('TRAIN','log_interval')
+    constants.adversarial_coeff = config.getfloat('TRAIN','adversarial_coeff')
 
     # --- Data params
     constants.noise_size = config.getint('DATA','noise_size')
@@ -202,6 +207,16 @@ def set_model_function(model_number, task):
         elif(task == "generate"):
             constants.model = model11
             generator = GenerateModel11()
+            constants.generate_motion = generator.generate_motion
+
+    elif(model_number == 12): #speech to AU
+        if(task == "train"):
+            constants.write_model = write_model_12
+            train = TrainModel12(gan=False)
+            constants.train_model = train.train_model
+        elif(task == "generate"):
+            constants.model = model12
+            generator = GenerateModel12()
             constants.generate_motion = generator.generate_motion
     else:
         raise Exception("Model ", model_number, " does not exist")

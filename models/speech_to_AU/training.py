@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 import constants.constants as constants
 from models.TrainClass import Train
-from models.speech_to_head.model import AutoEncoder
+from models.speech_to_AU.model import AutoEncoder
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistAllLossEpoch, plotHistLossEpoch
@@ -14,22 +14,21 @@ from torch.utils.tensorboard import SummaryWriter
 # to visualize
 # tensorboard --logdir ./runs/autoencoder/
 
-class TrainModel10(Train):
+class TrainModel12(Train):
 
     def __init__(self, gan):
-        super(TrainModel10, self).__init__(gan)
+        super(TrainModel12, self).__init__(gan)
 
     def test_loss(self, ae, testloader, criterion_pose, criterion_au):
         total_loss = 0
         for iteration, data in enumerate(testloader, 0):
             input, target = data
             input, target_eye, target_pose_r, target_au = self.format_data(input, target)
+            output_au = ae(input)
 
-            output_pose_r = ae(input)
+            loss_au = criterion_au(output_au, target_au.float())
 
-            loss_pose_r = criterion_pose(output_pose_r, target_pose_r)
-
-            loss = loss_pose_r
+            loss = loss_au
             total_loss += loss.data
 
         total_loss = total_loss/(iteration + 1)
@@ -66,10 +65,11 @@ class TrainModel10(Train):
 
                 optimizer.zero_grad()
 
-                output_pose_r = ae(input)
+                output_au = ae(input)
 
-                loss_pose_r = criterionL2(output_pose_r, target_pose_r)
-                loss = loss_pose_r
+                loss_au = criterionL2(output_au, target_au)
+
+                loss = loss_au
 
                 loss.backward()  # gradients are computed
                 optimizer.step() # updates the parameters, the function can be called once the gradients are computed using e.g. backward().

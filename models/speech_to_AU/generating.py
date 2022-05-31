@@ -1,4 +1,3 @@
-from pandas import DataFrame
 import torch
 import constants.constants as constants
 from models.GenerateClass import Generate
@@ -6,15 +5,15 @@ from torch_dataset import TrainSet
 
 
 
-class GenerateModel10(Generate):
+class GenerateModel12(Generate):
     def __init__(self):
-        super(GenerateModel10, self).__init__()
+        super(GenerateModel12, self).__init__()
 
     def generate_motion(self, model, prosody, pose):
         prosody = self.reshape_prosody(prosody)
         pose = self.reshape_pose(pose)
         input_eye, input_pose_r, input_au = self.separate_openface_features(pose)
         with torch.no_grad():
-            output_pose_r = model.forward(prosody)
-        outs = self.reshape_output(input_eye, output_pose_r, input_au)
+            output_pose_au = model.forward(prosody)
+        outs = self.reshape_output(input_eye, input_pose_r, output_pose_au)
         return outs

@@ -24,6 +24,7 @@ batch_size = 0
 d_lr =  0
 g_lr =  0
 log_interval =  0
+adversarial_coeff = 0
 
 
 # --- Data params

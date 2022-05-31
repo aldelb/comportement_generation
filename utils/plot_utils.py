@@ -29,7 +29,7 @@ def plotHistAllLossEpoch(num_epoch, loss_eye, loss_pose_r, loss_au, loss):
     plt.savefig(constants.saved_path+f'all_loss_epoch_{num_epoch}.png')
     plt.close()
 
-def plotHistLossEpochGAN(num_epoch, d_loss, t_loss, g_loss=None):
+def plotHistLossEpochGAN(num_epoch, d_loss, g_loss, t_loss=None):
     fig = plt.figure(dpi=100)
     ax1 = fig.add_subplot(1, 1, 1)
     ax1.plot(range(num_epoch+1), d_loss, label='discriminator loss')

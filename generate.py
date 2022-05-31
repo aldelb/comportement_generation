@@ -6,7 +6,7 @@ import constants.constants as constants
 from constants.constants_utils import read_params
 from utils.create_final_file import createFinalFile
 from utils.model_utils import find_model, load_model
-from torch_dataset import TestSet
+from torch_dataset import TestSet, TrainSet
 import pandas as pd
 
 gaze_columns = ["gaze_0_x", "gaze_0_y", "gaze_0_z", "gaze_1_x", "gaze_1_y", "gaze_1_z", "gaze_angle_x", "gaze_angle_y"]
@@ -56,7 +56,7 @@ if __name__ == "__main__":
             if(constants.prosody_size == 1):
                 input = np.reshape(input, input.shape + (1,))
 
-            if(constants.model_number in [10, 11]):
+            if(constants.model_number in [10, 11, 12]):
                 out = constants.generate_motion(model, input, target)
             else:
                 out = constants.generate_motion(model, input)

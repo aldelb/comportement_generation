@@ -11,7 +11,8 @@ def save_params(saved_path, model, D = None):
         "n_epochs" : constants.n_epochs,
         "batch_size" : constants.batch_size,
         "d_lr" : constants.d_lr,
-        "g_lr" : constants.g_lr}
+        "g_lr" : constants.g_lr,
+        "adversarial_coeff" : constants.adversarial_coeff}
 
     model_params = {
         "model" : constants.model_number,

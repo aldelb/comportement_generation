@@ -19,7 +19,7 @@ class TrainModel11(Train):
     def __init__(self, gan):
         super(TrainModel11, self).__init__(gan)
 
-    def test_loss(self, G, D, testloader, criterion_pose, criterion_loss):
+    def test_loss(self, G, D, testloader, criterion_pose, criterion_adv):
         total_loss = 0
         for iteration, data in enumerate(testloader, 0):
             input, target = data
@@ -30,7 +30,7 @@ class TrainModel11(Train):
             gen_lable = torch.ones_like(gen_logit)
 
             loss_pose_r = criterion_pose(gen_pose_r, target_pose_r.float())
-            adversarial_loss = criterion_loss(gen_logit, gen_lable)
+            adversarial_loss = (constants.adversarial_coeff * criterion_adv(gen_logit, gen_lable))
 
             loss = loss_pose_r + adversarial_loss
             total_loss += loss.data
@@ -136,7 +136,7 @@ class TrainModel11(Train):
                 gen_logit = D(gen_pose_r, input)
                 gen_lable = torch.ones_like(gen_logit)
 
-                adversarial_loss = bce_loss(gen_logit, gen_lable)
+                adversarial_loss = (constants.adversarial_coeff * bce_loss(gen_logit, gen_lable))
                 loss_pose_r = criterionL2(gen_pose_r, target_pose_r)
 
                 g_loss = loss_pose_r + adversarial_loss
@@ -152,11 +152,8 @@ class TrainModel11(Train):
             self.current_loss = self.current_loss/(iteration + 1)
             self.loss_tab.append(self.current_loss.cpu().detach().numpy())
 
-            self.t_loss = self.test_loss(G, D, self.testloader, criterionL2, criterionL2)
+            self.t_loss = self.test_loss(G, D, self.testloader, criterionL2, bce_loss)
             self.t_loss_tab.append(self.t_loss)
-        
-            print('[ %d ] g_loss : %.4f, t_loss : %.4f' % (epoch+1, self.current_loss, self.t_loss))
-            print('[ %d ] head_loss : %.4f, adv_loss : %.4f' % (epoch+1, loss_pose_r, adversarial_loss))
 
             #d_loss
             self.current_d_loss = self.current_d_loss/(iteration + 1) #loss par epoch
@@ -170,9 +167,8 @@ class TrainModel11(Train):
             self.current_fake_pred = self.current_fake_pred/(iteration + 1)
             self.d_fake_pred_tab.append(self.current_fake_pred.cpu().detach().numpy())
 
-
-
-            print('[ %d ] loss : %.4f %.4f' % (epoch+1, self.current_loss, self.t_loss))
+            print('[ %d ] g_loss : %.4f, t_loss : %.4f' % (epoch+1, self.current_loss, self.t_loss))
+            print('[ %d ] head_loss : %.4f, adv_loss : %.4f' % (epoch+1, loss_pose_r, adversarial_loss))
 
             if epoch % constants.log_interval == 0 or epoch >= self.n_epochs - 1:
                 print("saving...")
