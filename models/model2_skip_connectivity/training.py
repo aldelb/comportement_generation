@@ -9,6 +9,11 @@ from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistAllLossEpoch, plotHistLossEpoch
 
+import matplotlib
+matplotlib.use('Agg')
+import seaborn as sns
+sns.set_style('whitegrid')
+
 class TrainModel2(Train):
 
     def __init__(self, gan):

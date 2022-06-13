@@ -10,9 +10,8 @@ import torch
 from torch.autograd import Variable
 
 import matplotlib
-import seaborn as sns
-
 matplotlib.use('Agg')
+import seaborn as sns
 sns.set_style('whitegrid')
 
 
@@ -78,9 +77,8 @@ class TrainModel4(Train):
                 targets = torch.reshape(targets, (-1, targets.shape[2], targets.shape[1])).float()
 
                 # * Generate fake data
-                with torch.no_grad():
-                    output_eye, output_pose_r, output_au = G(inputs) #le générateur génére les fausses données conditionnellement à la prosodie
-                    fake_targets = torch.cat((output_eye, output_pose_r, output_au), 1)
+                output_eye, output_pose_r, output_au = G(inputs) #le générateur génére les fausses données conditionnellement à la prosodie
+                fake_targets = torch.cat((output_eye, output_pose_r, output_au), 1)
 
                 # * Train D :  maximize log(D(x)) + log(1 - D(G(z)))
                 #print("** Train the discriminator")
@@ -115,7 +113,7 @@ class TrainModel4(Train):
                         D.zero_grad()
 
                         real_logit = D(targets, inputs)
-                        fake_logit = D(fake_targets.detach(), inputs.detach())
+                        fake_logit = D(fake_targets.detach(), inputs)
 
                         real_label = torch.ones_like(real_logit)
                         d_real_error = bce_loss(real_logit, real_label)

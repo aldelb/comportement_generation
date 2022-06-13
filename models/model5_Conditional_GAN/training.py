@@ -11,9 +11,8 @@ import torch
 from torch.autograd import Variable
 
 import matplotlib
-import seaborn as sns
-
 matplotlib.use('Agg')
+import seaborn as sns
 sns.set_style('whitegrid')
 
 
@@ -72,21 +71,20 @@ class TrainModel5(Train):
                 torch.cuda.empty_cache()
                 # * Configure real data
                 inputs, targets = data[0].to(self.device), data[1].to(self.device)
-                inputs = torch.reshape(inputs, (-1, inputs.shape[2], inputs.shape[1]))
-                targets = torch.reshape(targets, (-1, targets.shape[2], targets.shape[1]))
+                inputs = torch.reshape(inputs, (-1, inputs.shape[2], inputs.shape[1])).float()
+                targets = torch.reshape(targets, (-1, targets.shape[2], targets.shape[1])).float()
                 real_batch_size = inputs.shape[0]
 
                 # * Generate fake data
                 #print("** Generate fake data")
                 noise = torch.FloatTensor(self.sample_noise(real_batch_size, constants.noise_size)).unsqueeze(1).to(self.device)
-                with torch.no_grad():
-                    fake_targets = G(inputs.float(), noise) #le générateur génére les fausses données conditionnellement à la prosodie
+                fake_targets = G(inputs.float(), noise) #le générateur génére les fausses données conditionnellement à la prosodie
 
                 # * Train D :  maximize log(D(x)) + log(1 - D(G(z)))
                 #print("** Train the discriminator")
                 D.zero_grad()
-                real_logit = D(targets.float(), inputs.float()) #produce a result for each frame (tensor of length 300)
-                fake_logit = D(fake_targets.detach(), inputs.float().detach())
+                real_logit = D(targets, inputs) #produce a result for each frame (tensor of length 300)
+                fake_logit = D(fake_targets.detach(), inputs)
 
                 #discriminator prediction
                 self.current_real_pred += torch.mean(real_logit).item() #moy because the discriminator made a prediction for each frame
@@ -113,8 +111,8 @@ class TrainModel5(Train):
                         # * Train D
                         D.zero_grad()
 
-                        real_logit = D(targets.float(), inputs.float())
-                        fake_logit = D(fake_targets.detach(), inputs.float().detach())
+                        real_logit = D(targets, inputs)
+                        fake_logit = D(fake_targets.detach(), inputs)
 
                         real_label = torch.ones_like(real_logit)
                         d_real_error = bce_loss(real_logit, real_label)
@@ -131,8 +129,8 @@ class TrainModel5(Train):
                 #print("** Train the generator")
                 G.zero_grad()
                 noise = torch.FloatTensor(self.sample_noise(real_batch_size, constants.noise_size)).unsqueeze(1).to(self.device)
-                gen_y = G(inputs.float(), noise)
-                gen_logit = D(gen_y, inputs.float())
+                gen_y = G(inputs, noise)
+                gen_logit = D(gen_y, inputs)
                 gen_lable = torch.ones_like(gen_logit)
 
                 g_loss = bce_loss(gen_logit, gen_lable)
