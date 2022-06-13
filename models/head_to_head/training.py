@@ -7,26 +7,29 @@ from models.TrainClass import Train
 from models.head_to_head.model import AutoEncoder
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
-from utils.plot_utils import plotHistAllLossEpoch, plotHistLossEpoch
+from utils.plot_utils import plotHistLossEpoch
 
 class TrainModel9(Train):
     def __init__(self, gan):
         super(TrainModel9, self).__init__(gan)
 
     def test_loss(self, ae, testloader, criterion_pose):
-        total_loss = 0
-        for iteration, data in enumerate(testloader, 0):
-            _, target = data
-            input = target
-            input, target_eye, target_pose_r, target_au = self.format_data(input, target)
-            _, _, input, _ = self.separate_openface_features(input, dim=1)
-            output_pose_r = ae(input)
-            loss_pose_r = criterion_pose(output_pose_r, target_pose_r)
+        torch.cuda.empty_cache()
+        with torch.no_grad():
+            print("Calculate test loss...")
+            total_loss = 0
+            for iteration, data in enumerate(testloader, 0):
+                _, target = data
+                input = target
+                input, target_eye, target_pose_r, target_au = self.format_data(input, target)
+                _, _, input, _ = self.separate_openface_features(input)
+                output_pose_r = ae(input)
+                loss_pose_r = criterion_pose(output_pose_r, target_pose_r)
 
-            total_loss += loss_pose_r.data
+                total_loss += loss_pose_r.item()
 
-        total_loss = total_loss/(iteration + 1)
-        return total_loss.cpu().detach().numpy()
+            total_loss = total_loss/(iteration + 1)
+            return total_loss
 
     def calculate_spatial_reg(self, output):
         """ régularisation pour minimiser la distance entre les points t et t-k """
@@ -43,7 +46,7 @@ class TrainModel9(Train):
     def train_model(self):
         print("Launching of model 9 : head to head")
         print("Saving params...")
-        ae = AutoEncoder()
+        ae = AutoEncoder().to(self.device)
         optimizer = optim.Adam(ae.parameters(), lr=constants.g_lr)
         criterionL2 = nn.MSELoss()
         save_params(constants.saved_path, ae)
@@ -57,9 +60,9 @@ class TrainModel9(Train):
                 _, target = data
                 input = target
                 input, target_eye, target_pose_r, target_au = self.format_data(input, target)
-                _, _, input, _ = self.separate_openface_features(input, dim=1)
+                _, _, input, _ = self.separate_openface_features(input)
                 
-                optimizer.zero_grad()
+                ae.zero_grad()
 
                 output_pose_r = ae(input)
 
@@ -72,13 +75,13 @@ class TrainModel9(Train):
                 loss.backward()  # gradients are computed
                 optimizer.step() # updates the parameters, the function can be called once the gradients are computed using e.g. backward().
 
-                self.current_loss_pose_r += loss_pose_r
+                self.current_loss_pose_r += loss_pose_r.item()
 
-                self.current_loss += loss
+                self.current_loss += loss.item()
 
             
             self.current_loss = self.current_loss/(iteration + 1) 
-            self.loss_tab.append(self.current_loss.cpu().detach().numpy())
+            self.loss_tab.append(self.current_loss)
             
             self.t_loss = self.test_loss(ae, self.testloader, criterionL2)
             self.t_loss_tab.append(self.t_loss)

@@ -2,11 +2,12 @@ import argparse
 from genericpath import isdir
 import os
 import numpy as np
+import torch
 import constants.constants as constants
 from constants.constants_utils import read_params
 from utils.create_final_file import createFinalFile
 from utils.model_utils import find_model, load_model
-from torch_dataset import TestSet, TrainSet
+from torch_dataset import TestSet
 import pandas as pd
 
 gaze_columns = ["gaze_0_x", "gaze_0_y", "gaze_0_z", "gaze_1_x", "gaze_1_y", "gaze_1_z", "gaze_angle_x", "gaze_angle_y"]
@@ -19,12 +20,17 @@ if __name__ == "__main__":
     parser.add_argument('-params', help='Path to the constant file', default="./params.cfg")
     parser.add_argument('-epoch', help='number of epoch of recovred model', default=9)
     parser.add_argument('-video', help='wich video we want to generate', default="all")
-    
+    parser.add_argument('-dataset', help='wich video we want to generate', default="")
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     args = parser.parse_args()
     read_params(args.params, "generate")
 
+    if(args.dataset != ""):
+        datasets = args.dataset
+        constants.datasets = datasets.split(",")
+
     model_file = find_model(int(args.epoch)) 
-    model = load_model(constants.dir_path + constants.saved_path + model_file)
+    model = load_model(constants.dir_path + constants.saved_path + model_file, device)
 
     path_data_out = constants.dir_path + constants.output_path + model_file[0:-3] + "/"
     if(not isdir(path_data_out)):
@@ -39,8 +45,8 @@ if __name__ == "__main__":
     current_key = ""
     df_list = []
 
-    for index, data in enumerate(test_set):
-        input, target = data
+    for index, data in enumerate(test_set, 0):
+        input, target = data[0], data[1]
         if(constants.model_number in [7,8,9]):
             input = target
         key = test_set.getInterval(index)[0]

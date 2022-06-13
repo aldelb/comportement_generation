@@ -1,7 +1,6 @@
 from datetime import datetime
 from models.TrainClass import Train
 from models.model4_GAN_autoencoders.model import Generator, Discriminator
-from torch_dataset import TestSet, TrainSet
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistAllLossEpoch, plotHistLossEpochGAN, plotHistPredEpochGAN
@@ -11,16 +10,11 @@ import torch
 from torch.autograd import Variable
 
 import matplotlib
-import matplotlib.pyplot as plt
 import seaborn as sns
 
 matplotlib.use('Agg')
 sns.set_style('whitegrid')
 
-# from torch.utils.tensorboard import SummaryWriter
-# writer = SummaryWriter('./runs/autoencoder')
-#to visualize
-#tensorboard --logdir ./runs/autoencoder/ 
 
 class TrainModel4(Train):
 
@@ -28,27 +22,30 @@ class TrainModel4(Train):
        super(TrainModel4, self).__init__(gan)
 
     def test_loss(self, G, D, testloader, criterion_pose, criterion_au, criterion_adv):
-        total_loss = 0
-        for iteration ,data in enumerate(testloader,0):
-            input, target = data
-            input, target_eye, target_pose_r, target_au = self.format_data(input, target)
+        torch.cuda.empty_cache()
+        with torch.no_grad():
+            print("Calculate test loss...")
+            total_loss = 0
+            for iteration ,data in enumerate(testloader,0):
+                input, target = data[0].to(self.device), data[1].to(self.device)
+                input, target_eye, target_pose_r, target_au = self.format_data(input, target)
 
-            gen_eye, gen_pose_r, gen_au = G(input)
-            gen_y = torch.cat((gen_eye, gen_pose_r, gen_au), 1)
-            gen_logit = D(gen_y, input)
-            gen_lable = torch.ones_like(gen_logit)
-            
-            loss_eye = criterion_pose(gen_eye, target_eye.float())
-            loss_pose_r = criterion_pose(gen_pose_r, target_pose_r.float())
-            loss_au = criterion_au(gen_au, target_au.float())
+                gen_eye, gen_pose_r, gen_au = G(input)
+                gen_y = torch.cat((gen_eye, gen_pose_r, gen_au), 1)
+                gen_logit = D(gen_y, input)
+                gen_lable = torch.ones_like(gen_logit)
+                
+                loss_eye = criterion_pose(gen_eye, target_eye)
+                loss_pose_r = criterion_pose(gen_pose_r, target_pose_r)
+                loss_au = criterion_au(gen_au, target_au)
 
-            adversarial_loss = constants.adversarial_coeff * criterion_adv(gen_logit, gen_lable)
-            
-            loss = loss_eye + loss_pose_r + loss_au + adversarial_loss
-            total_loss += loss.data
+                adversarial_loss = constants.adversarial_coeff * criterion_adv(gen_logit, gen_lable)
+                
+                loss = loss_eye + loss_pose_r + loss_au + adversarial_loss
+                total_loss += loss.item()
 
-        total_loss = total_loss/(iteration + 1)
-        return total_loss.cpu().detach().numpy()
+            total_loss = total_loss/(iteration + 1)
+            return total_loss
 
     def train_model(self):
         print("Launching of model 4 : GAN with auto encoder as generator")
@@ -64,21 +61,8 @@ class TrainModel4(Train):
         print("Saving params...")
         save_params(constants.saved_path, G, D)
 
-
-        ####Tensorboard visualisation#########
-        # print("TensorBoard visualisation...")
-        # dataiter = iter(trainloader)
-        # prosodie, pose = dataiter.next()
-        # prosodie, pose =  Variable(prosodie), Variable(pose)
-        # prosodie, pose = torch.reshape(prosodie, (-1, prosodie.shape[2], prosodie.shape[1])), torch.reshape(pose, (-1, pose.shape[2], pose.shape[1]))
-        # #writer.add_graph(G, prosodie.float())
-        # writer.add_graph(D, (prosodie.float(), pose.float()))
-        # writer.close()
-        #######################################
-
         bce_loss = torch.nn.BCELoss()
-        criterionL2 = nn.MSELoss()
-        criterionL1 = nn.L1Loss()
+        criterion = nn.MSELoss()
 
         print("Starting Training Loop...")
         for epoch in range(self.n_epochs):
@@ -89,9 +73,8 @@ class TrainModel4(Train):
                 print("*"+f"Starting iteration {iteration + 1}/{self.n_iteration_per_epoch}...")
                 torch.cuda.empty_cache()
                 # * Configure real data
-                inputs, targets = data
+                inputs, targets = data[0].to(self.device), data[1].to(self.device)
                 inputs, target_eye, target_pose_r, target_au = self.format_data(inputs, targets)
-                targets = Variable(targets)
                 targets = torch.reshape(targets, (-1, targets.shape[2], targets.shape[1])).float()
 
                 # * Generate fake data
@@ -100,61 +83,63 @@ class TrainModel4(Train):
                     fake_targets = torch.cat((output_eye, output_pose_r, output_au), 1)
 
                 # * Train D :  maximize log(D(x)) + log(1 - D(G(z)))
-                print("** Train the discriminator")
-                d_opt.zero_grad()
+                #print("** Train the discriminator")
+                D.zero_grad()
                 real_logit = D(targets, inputs) #produce a result for each frame (tensor of length 300)
-                fake_logit = D(fake_targets, inputs)
+                fake_logit = D(fake_targets.detach(), inputs.detach())
 
                 #discriminator prediction
-                self.current_real_pred += torch.mean(real_logit) #moy because the discriminator made a prediction for each frame
-                self.current_fake_pred += torch.mean(fake_logit)
+                self.current_real_pred += torch.mean(real_logit).item() #moy because the discriminator made a prediction for each frame
+                self.current_fake_pred += torch.mean(fake_logit).item()
 
                 #discriminator loss
                 real_label = torch.ones_like(real_logit) #tensor fill of 1 with the same size as input
                 d_real_error = bce_loss(real_logit, real_label) #measures the Binary Cross Entropy between the target and the input probabilities
+                d_real_error.backward()
 
                 fake_label = torch.zeros_like(fake_logit)
                 d_fake_error = bce_loss(fake_logit, fake_label)
+                d_fake_error.backward()
                 
                 d_loss = d_real_error + d_fake_error
-                d_loss.backward() #gradients are computed
                 d_opt.step() #updates the parameters, the function can be called once the gradients are computed using e.g. backward().
 
-                self.current_d_loss += d_loss
+                self.current_d_loss += d_loss.item()
 
                 if constants.unroll_steps:
-                    print("** Unroll D to reduce mode collapse")
+                    #print("** Unroll D to reduce mode collapse")
                     # * Unroll D to reduce mode collapse
                     d_backup = D.state_dict() #a Python dictionary object that maps each layer to its parameter tensor.
                     for _ in range(constants.unroll_steps):
                         # * Train D
-                        d_opt.zero_grad()
+                        D.zero_grad()
 
                         real_logit = D(targets, inputs)
-                        fake_logit = D(fake_targets, inputs)
+                        fake_logit = D(fake_targets.detach(), inputs.detach())
 
                         real_label = torch.ones_like(real_logit)
                         d_real_error = bce_loss(real_logit, real_label)
+                        d_real_error.backward()
 
                         fake_label = torch.zeros_like(fake_logit)
                         d_fake_error = bce_loss(fake_logit, fake_label)
+                        d_fake_error.backward()
 
                         d_loss = d_real_error + d_fake_error
-                        d_loss.backward()
                         d_opt.step()
 
                 # * Train G
-                print("** Train the generator")
-                g_opt.zero_grad()
+                #print("** Train the generator")
+                G.zero_grad()
                 gen_eye, gen_pose_r, gen_au = G(inputs)
                 gen_y = torch.cat((gen_eye, gen_pose_r, gen_au), 1)
                 gen_logit = D(gen_y, inputs)
                 gen_lable = torch.ones_like(gen_logit)
 
                 adversarial_loss = constants.adversarial_coeff * bce_loss(gen_logit, gen_lable)
-                loss_eye = criterionL2(gen_eye, target_eye)
-                loss_pose_r = criterionL2(gen_pose_r, target_pose_r)
-                loss_au = criterionL2(gen_au, target_au)
+                loss_eye = criterion(gen_eye, target_eye)
+                loss_pose_r = criterion(gen_pose_r, target_pose_r)
+                loss_au = criterion(gen_au, target_au)
 
                 g_loss = loss_eye + loss_pose_r + loss_au + adversarial_loss
                 g_loss.backward()
@@ -163,16 +148,17 @@ class TrainModel4(Train):
                 if constants.unroll_steps:
                     D.load_state_dict(d_backup)
 
-                self.current_loss_eye += loss_eye
-                self.current_loss_pose_r += loss_pose_r
-                self.current_loss_au += loss_au
+                self.current_loss_eye += loss_eye.item()
+                self.current_loss_pose_r += loss_pose_r.item()
+                self.current_loss_au += loss_au.item()
 
-                self.current_loss += g_loss
+                self.current_loss += g_loss.item()
 
-            self.t_loss = self.test_loss(G, D, self.testloader, criterionL2, criterionL2, bce_loss)
+            self.t_loss = self.test_loss(G, D, self.testloader, criterion, criterion, bce_loss)
             self.update_loss_tab(iteration)
 
             print('[ %d ] loss : %.4f %.4f' % (epoch+1, self.current_loss, self.t_loss))
+            print('[ %d ] pred : %.4f %.4f' % (epoch+1, self.current_real_pred, self.current_fake_pred))
 
             if epoch % constants.log_interval == 0 or epoch >= self.n_epochs - 1:
                 print("saving...")

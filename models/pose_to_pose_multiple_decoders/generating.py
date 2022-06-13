@@ -1,7 +1,5 @@
 import torch
-import constants.constants as constants
 from models.GenerateClass import Generate
-from torch_dataset import TrainSet
 
 class GenerateModel8(Generate):
     def __init__(self):

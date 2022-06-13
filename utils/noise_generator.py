@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class NoiseGenerator:
 
     def __init__(self):

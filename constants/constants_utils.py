@@ -3,51 +3,6 @@ import constants.constants as constants
 import os
 from datetime import date
 
-from models.head_to_head.generating import GenerateModel9
-from models.head_to_head.model import write_model_9
-from models.head_to_head.training import TrainModel9
-from models.model2_skip_connectivity.generating import GenerateModel2
-from models.model2_skip_connectivity.model import write_model_2
-from models.model2_skip_connectivity.training import TrainModel2
-from models.model3_multiple_decoders.generating import GenerateModel3
-from models.model3_multiple_decoders.model import write_model_3
-from models.model3_multiple_decoders.training import TrainModel3
-from models.model4_GAN_autoencoders.generating import GenerateModel4
-from models.model4_GAN_autoencoders.model import write_model_4
-from models.model4_GAN_autoencoders.training import TrainModel4
-from models.model5_Conditional_GAN.generating import generate_motion_5
-from models.model5_Conditional_GAN.model import write_model_5
-from models.model5_Conditional_GAN.training import train_model_5
-from models.pose_to_pose.generating import GenerateModel7
-from models.pose_to_pose.model import write_model_7
-from models.pose_to_pose.training import TrainModel7
-from models.pose_to_pose_multiple_decoders.generating import GenerateModel8
-from models.pose_to_pose_multiple_decoders.model import write_model_8
-from models.pose_to_pose_multiple_decoders.training import TrainModel8
-from models.speech_to_AU.generating import GenerateModel12
-from models.speech_to_AU.model import write_model_12
-from models.speech_to_AU.training import TrainModel12
-from models.speech_to_head.generating import GenerateModel10
-from models.speech_to_head.model import write_model_10
-from models.speech_to_head.training import TrainModel10
-from models.speech_to_head_GAN.generating import GenerateModel11
-from models.speech_to_head_GAN.model import write_model_11
-from models.speech_to_head_GAN.training import TrainModel11
-from models.speech_to_speech.model import write_model_6
-from models.speech_to_speech.training import train_model_speech_to_speech
-from models.model2_skip_connectivity.model import AutoEncoder as model2
-from models.model3_multiple_decoders.model import AutoEncoder as model3
-from models.model4_GAN_autoencoders.model import Generator as model4
-from models.model5_Conditional_GAN.model import Generator as model5
-from models.speech_to_speech.model import AutoEncoder as model6
-from models.pose_to_pose.model import AutoEncoder as model7
-from models.pose_to_pose_multiple_decoders.model import AutoEncoder as model8
-from models.head_to_head.model import AutoEncoder as model9
-from models.speech_to_head.model import AutoEncoder as model10
-from models.speech_to_head_GAN.model import Generator as model11
-from models.speech_to_AU.model import AutoEncoder as model12
-
-
 config = configparser.RawConfigParser()
 
 def read_params(file, task="train", id=None):
@@ -64,8 +19,6 @@ def read_params(file, task="train", id=None):
     constants.hidden_size =  config.getint('MODEL_TYPE','hidden_size') 
     constants.kernel_size = config.getint('MODEL_TYPE','kernel_size') 
     constants.first_kernel_size = config.getint('MODEL_TYPE','first_kernel_size') 
-    constants.padding_size = int((constants.kernel_size - 1)/2)
-    constants.first_padding_size = int((constants.first_kernel_size - 1)/2)
     constants.dropout =  config.getfloat('MODEL_TYPE','dropout') 
 
     datasets = config.get('PATH','datasets')
@@ -115,109 +68,38 @@ def read_params(file, task="train", id=None):
 
 def set_model_function(model_number, task):
     if(model_number == 2): #simple autoencoder with skip connectivity
-        if(task == "train"):
-            constants.write_model = write_model_2
-            train = TrainModel2(gan=False)
-            constants.train_model = train.train_model
-        elif(task == "generate"):
-            constants.model = model2
-            generator = GenerateModel2()
-            constants.generate_motion = generator.generate_motion
-
+        from models.model2_skip_connectivity.init_model import init_model_2
+        init_model_2(task)
     elif(model_number == 3): #multiple decoders
-        if(task == "train"):
-            constants.write_model = write_model_3
-            train = TrainModel3(gan=False)
-            constants.train_model = train.train_model
-        elif(task == "generate"):
-            constants.model = model3
-            generator = GenerateModel3()
-            constants.generate_motion = generator.generate_motion
-
+        from models.model3_multiple_decoders.init_model import init_model_3
+        init_model_3(task)
     elif(model_number == 4): #autoencoders GAN
-        if(task == "train"):
-            constants.write_model = write_model_4
-            train = TrainModel4(gan=True)
-            constants.train_model = train.train_model
-        elif(task == "generate"):
-            constants.model = model4
-            generator = GenerateModel4()
-            constants.generate_motion = generator.generate_motion
-
+        from models.model4_GAN_autoencoders.init_model import init_model_4
+        init_model_4(task)
     elif(model_number == 5): #GAN
-        if(task == "train"):
-            constants.write_model = write_model_5
-            constants.train_model = train_model_5
-        elif(task == "generate"):
-            constants.model = model5
-            constants.generate_motion = generate_motion_5
-
+        from models.model5_Conditional_GAN.init_model import init_model_5
+        init_model_5(task)
     elif(model_number == 6): #speech to speech
-        if(task == "train"):
-            constants.write_model = write_model_6
-            constants.train_model = train_model_speech_to_speech
-        elif(task == "generate"):
-            raise Exception("No generation possible with model 6")
-
+        from models.speech_to_speech.init_model import init_model_6
+        init_model_6(task)
     elif(model_number == 7): #pose to pose
-        if(task == "train"):
-            constants.write_model = write_model_7
-            train = TrainModel7(gan=False)
-            constants.train_model = train.train_model
-        elif(task == "generate"):
-            constants.model = model7
-            generator = GenerateModel7()
-            constants.generate_motion = generator.generate_motion
-
+        from models.pose_to_pose.init_model import init_model_7
+        init_model_7(task)
     elif(model_number == 8): #pose to pose multiple decoders
-        if(task == "train"):
-            constants.write_model = write_model_8
-            train = TrainModel8(gan=False)
-            constants.train_model = train.train_model
-        elif(task == "generate"):
-            constants.model = model8
-            generator = GenerateModel8()
-            constants.generate_motion = generator.generate_motion
-
+        from models.pose_to_pose_multiple_decoders.init_model import init_model_8
+        init_model_8(task)
     elif(model_number == 9): #head to head
-        if(task == "train"):
-            constants.write_model = write_model_9
-            train = TrainModel9(gan=False)
-            constants.train_model = train.train_model
-        elif(task == "generate"):
-            constants.model = model9
-            generator = GenerateModel9()
-            constants.generate_motion = generator.generate_motion
-            
+        from models.head_to_head.init_model import init_model_9 
+        init_model_9(task)           
     elif(model_number == 10): #speech to head
-        if(task == "train"):
-            constants.write_model = write_model_10
-            train = TrainModel10(gan=False)
-            constants.train_model = train.train_model
-        elif(task == "generate"):
-            constants.model = model10
-            generator = GenerateModel10()
-            constants.generate_motion = generator.generate_motion
-    
+        from models.speech_to_head.init_model import init_model_10
+        init_model_10(task)   
     elif(model_number == 11): #speech to head with GAN
-        if(task == "train"):
-            constants.write_model = write_model_11
-            train = TrainModel11(gan=True)
-            constants.train_model = train.train_model
-        elif(task == "generate"):
-            constants.model = model11
-            generator = GenerateModel11()
-            constants.generate_motion = generator.generate_motion
-
+        from models.speech_to_head_GAN.init_model import init_model_11
+        init_model_11(task)
     elif(model_number == 12): #speech to AU
-        if(task == "train"):
-            constants.write_model = write_model_12
-            train = TrainModel12(gan=False)
-            constants.train_model = train.train_model
-        elif(task == "generate"):
-            constants.model = model12
-            generator = GenerateModel12()
-            constants.generate_motion = generator.generate_motion
+        from models.speech_to_AU.init_model import init_model_12
+        init_model_12(task)
     else:
         raise Exception("Model ", model_number, " does not exist")
 

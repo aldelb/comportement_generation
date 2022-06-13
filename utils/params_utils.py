@@ -21,8 +21,6 @@ def save_params(saved_path, model, D = None):
         "hidden_size" : constants.hidden_size,
         "first_kernel_size" : constants.first_kernel_size,
         "kernel_size" : constants.kernel_size,
-        "first_padding_size" : constants.first_padding_size,
-        "padding_size" : constants.padding_size,
         "dropout" : constants.dropout}
 
     data_params = {
@@ -42,5 +40,9 @@ def save_params(saved_path, model, D = None):
     write_params(f, "Data params", data_params)
 
     f.write("-"*10 + "Models" + "-"*10 + "\n")
+    f.write("-"*10 + "Generateur" + "-"*10 + "\n")
+    f.write(str(model))
+    if(D != None):
+        f.write("-"*10 + "Discriminateur" + "-"*10 + "\n")
+        f.write(str(D))
     f.close()
-    constants.write_model(file_path, model, D)

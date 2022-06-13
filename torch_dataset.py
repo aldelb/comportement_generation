@@ -3,8 +3,7 @@ import pickle
 from torch.utils.data import Dataset
 from sklearn.preprocessing import MinMaxScaler
 import constants.constants as constants
-import librosa
-import sys
+import speechpy
 
 class Set(Dataset):
 
@@ -20,12 +19,11 @@ class Set(Dataset):
             current_X = []
             with open(path +'X_'+setType+'_'+set_name+'.p', 'rb') as f:
                 x = pickle.load(f)
-            for item in x:
-                current_X.append(item[:,np.r_[constants.selected_os_index_columns]])
-            current_X = np.array(current_X)
+            current_X = np.array(x)[:,:,np.r_[constants.selected_os_index_columns]]
 
             if(len(constants.selected_os_index_columns) == 1):
                 current_X = np.reshape(current_X, current_X.shape + (1,))
+                
             if constants.derivative:
                 current_X = self.addDerevative(current_X)
 
@@ -73,16 +71,11 @@ class Set(Dataset):
     
     def addDerevative(self, X):
         for i in range(X.shape[2]):
-            X = np.append(X, librosa.feature.delta(X[:,:,i], order=1).reshape(X.shape[0], X.shape[1], -1), axis=2)
-            X = np.append(X, librosa.feature.delta(X[:,:,i], order=2).reshape(X.shape[0], X.shape[1], -1), axis=2)
+            first = speechpy.processing.derivative_extraction(X[:,:,i], 1)
+            second = speechpy.processing.derivative_extraction(first, 1)
+            X = np.append(X, first.reshape(X.shape[0], X.shape[1], -1), axis=2)
+            X = np.append(X, second.reshape(X.shape[0], X.shape[1], -1), axis=2)
         return X
-    
-    def addDerevativeToOneRow(self, X):
-        for i in range(X.shape[1]):
-            X = np.append(X, librosa.feature.delta(X[:,i], order=1).reshape(X.shape[0], -1), axis=1)
-            X = np.append(X, librosa.feature.delta(X[:,i], order=2).reshape(X.shape[0], -1), axis=1)
-        return X
-
 
 class TrainSet(Set):
 

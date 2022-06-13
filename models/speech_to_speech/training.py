@@ -2,7 +2,6 @@ from datetime import datetime
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.autograd import Variable
 import constants.constants as constants
 from models.speech_to_speech.model import AutoEncoder
 from utils.model_utils import saveModel
@@ -12,21 +11,23 @@ from torch_dataset import TestSet, TrainSet
 
 
 def test_loss(ae, testloader, criterion):
-    print("Calculate test loss...")
-    total_loss = 0
-    for iteration ,data in enumerate(testloader,0):
-        input, _ = data
-        target = input
-        input, target = Variable(input), Variable(target)
-        input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
-        target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))
+    torch.cuda.empty_cache()
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    with torch.no_grad():
+        print("Calculate test loss...")
+        total_loss = 0
+        for iteration ,data in enumerate(testloader,0):
+            input = data[0].to(device)
+            target = input
+            input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
+            target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))
 
-        output = ae(input.float())
-        loss = criterion(output, target.float())
-        total_loss += loss.data
+            output = ae(input.float())
+            loss = criterion(output, target.float())
+            total_loss += loss.item()
 
-    total_loss = total_loss/(iteration + 1)
-    return total_loss.cpu().detach().numpy()
+        total_loss = total_loss/(iteration + 1)
+        return total_loss
 
 
 def train_model_speech_to_speech():
@@ -37,15 +38,15 @@ def train_model_speech_to_speech():
 
     trainset = TrainSet()
     trainset.scaling(True)
-    trainloader = torch.utils.data.DataLoader(trainset,batch_size=batchsize,shuffle=True,num_workers=2)
+    trainloader = torch.utils.data.DataLoader(trainset,batch_size=batchsize,shuffle=True)
     n_iteration_per_epoch = len(trainloader)
 
     testset = TestSet()
     testset.scaling(trainset.x_scaler, trainset.y_scaler)
-    testloader = torch.utils.data.DataLoader(testset,batch_size=batchsize,shuffle=True,num_workers=2)
+    testloader = torch.utils.data.DataLoader(testset,batch_size=batchsize,shuffle=True)
     
     print("Saving params...")
-    ae = AutoEncoder()
+    ae = AutoEncoder().to(device)
     optimizer = optim.Adam(ae.parameters(),lr=constants.g_lr)
     criterion = nn.MSELoss()
     save_params(constants.saved_path, ae)
@@ -58,12 +59,11 @@ def train_model_speech_to_speech():
         current_loss = 0
         for iteration, data in enumerate(trainloader,0):
             print("*"+f"Starting iteration {iteration + 1}/{n_iteration_per_epoch}...")
-            input, _ = data
+            input = data[0].to(device)
             target = input
-            input, target = Variable(input), Variable(target)
             input = torch.reshape(input, (-1, input.shape[2], input.shape[1]))
             target = torch.reshape(target, (-1, target.shape[2], target.shape[1]))
-            optimizer.zero_grad()
+            ae.zero_grad()
 
             output = ae(input.float())
             loss = criterion(output, target.float())
@@ -71,10 +71,9 @@ def train_model_speech_to_speech():
             loss.backward() #gradients are computed
             optimizer.step()  #updates the parameters, the function can be called once the gradients are computed using e.g. backward().
 
-            current_loss += loss 
+            current_loss += loss.item() 
         
-        current_loss = current_loss/(iteration + 1) #loss par epoch
-        current_loss = current_loss.cpu().detach().numpy()
+        current_loss = current_loss/(iteration + 1) #loss par epoch()
         loss_tab.append(current_loss)
 
         t_loss = test_loss(ae, testloader, criterion)

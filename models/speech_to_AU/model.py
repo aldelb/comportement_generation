@@ -1,19 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 import constants.constants as constants
-import contextlib
-from torchsummary import summary
 from utils.model_parts import DoubleConv, Down, OutConv, Up
-#pip install torchsummary
-
-def write_model_12(file_path, model, D):
-        with open(file_path, "a") as o:
-            with contextlib.redirect_stdout(o):
-                summary(model, (constants.prosody_size, 300), batch_size = constants.batch_size)
-        o.close()
-
 
 class AutoEncoder(nn.Module):
     def __init__(self):
@@ -22,18 +11,18 @@ class AutoEncoder(nn.Module):
         factor = 2 if bilinear else 1
 
         ##Encoder
-        self.inc = DoubleConv(constants.prosody_size, 64, constants.first_kernel_size, constants.first_padding_size)
-        self.down1 = Down(64, 128, constants.kernel_size, constants.padding_size)
-        self.down2 = Down(128, 256, constants.kernel_size, constants.padding_size)
-        self.down3 = Down(256, 512, constants.kernel_size, constants.padding_size)
-        self.down4 = Down(512, 1024 // factor, constants.kernel_size, constants.padding_size)
+        self.inc = DoubleConv(constants.prosody_size, 64, constants.first_kernel_size)
+        self.down1 = Down(64, 128, constants.kernel_size)
+        self.down2 = Down(128, 256, constants.kernel_size)
+        self.down3 = Down(256, 512, constants.kernel_size)
+        self.down4 = Down(512, 1024 // factor, constants.kernel_size)
 
         ##Decoder pose_au
-        self.up1_pose_au = Up(1024, 512 // factor, constants.kernel_size, constants.padding_size, bilinear)
-        self.up2_pose_au = Up(512, 256 // factor, constants.kernel_size, constants.padding_size, bilinear)
-        self.up3_pose_au = Up(256, 128 // factor, constants.kernel_size, constants.padding_size, bilinear)
-        self.up4_pose_au = Up(128, 64, constants.kernel_size, constants.padding_size, bilinear)
-        self.outc_au = OutConv(64, constants.au_size, constants.kernel_size, constants.padding_size)
+        self.up1_pose_au = Up(1024, 512 // factor, constants.kernel_size, bilinear)
+        self.up2_pose_au = Up(512, 256 // factor, constants.kernel_size, bilinear)
+        self.up3_pose_au = Up(256, 128 // factor, constants.kernel_size, bilinear)
+        self.up4_pose_au = Up(128, 64, constants.kernel_size, bilinear)
+        self.outc_au = OutConv(64, constants.au_size, constants.kernel_size)
 
 
     def forward(self, x):

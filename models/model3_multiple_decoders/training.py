@@ -8,11 +8,6 @@ from models.model3_multiple_decoders.model import AutoEncoder
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistAllLossEpoch, plotHistLossEpoch
-from torch.utils.tensorboard import SummaryWriter
-
-# writer = SummaryWriter('./runs/autoencoder')
-# to visualize
-# tensorboard --logdir ./runs/autoencoder/
 
 class TrainModel3(Train):
 
@@ -20,40 +15,33 @@ class TrainModel3(Train):
         super(TrainModel3, self).__init__(gan)
 
     def test_loss(self, ae, testloader, criterion_pose, criterion_au):
-        total_loss = 0
-        for iteration, data in enumerate(testloader, 0):
-            input, target = data
-            input, target_eye, target_pose_r, target_au = self.format_data(input, target)
-            output_eye, output_pose_r, output_au = ae(input)
+        torch.cuda.empty_cache()
+        with torch.no_grad():
+            print("Calculate test loss...")
+            total_loss = 0
+            for iteration, data in enumerate(testloader, 0):
+                input, target = data[0].to(self.device), data[1].to(self.device)
+                input, target_eye, target_pose_r, target_au = self.format_data(input, target)
+                output_eye, output_pose_r, output_au = ae(input)
 
-            loss_eye = criterion_pose(output_eye, target_eye.float())
-            loss_pose_r = criterion_pose(output_pose_r, target_pose_r.float())
-            loss_au = criterion_au(output_au, target_au.float())
+                loss_eye = criterion_pose(output_eye, target_eye.float())
+                loss_pose_r = criterion_pose(output_pose_r, target_pose_r.float())
+                loss_au = criterion_au(output_au, target_au.float())
 
-            loss = loss_eye + loss_pose_r + loss_au
-            total_loss += loss.data
+                loss = loss_eye + loss_pose_r + loss_au
+                total_loss += loss.item()
 
-        total_loss = total_loss/(iteration + 1)
-        return total_loss.cpu().detach().numpy()
+            total_loss = total_loss/(iteration + 1)
+            return total_loss
 
 
     def train_model(self):
         print("Launching of model 3 : auto encoder with four decoders")
         print("Saving params...")
-        ae = AutoEncoder()
+        ae = AutoEncoder().to(self.device)
         optimizer = optim.Adam(ae.parameters(), lr=constants.g_lr)
-        criterionL2 = nn.MSELoss()
+        criterion = nn.MSELoss()
         save_params(constants.saved_path, ae)
-
-        ####Tensorboard visualisation#########
-        # print("TensorBoard visualisation...")
-        # dataiter = iter(trainloader)
-        # prosodie, pose = dataiter.next()
-        # prosodie =  Variable(prosodie)
-        # prosodie = torch.reshape(prosodie, (-1, prosodie.shape[2], prosodie.shape[1]))
-        # writer.add_graph(ae, prosodie.float())
-        # writer.close()
-        #######################################
 
         print("Starting Training Loop...")
         for epoch in range(0, self.n_epochs):
@@ -62,29 +50,30 @@ class TrainModel3(Train):
             print(f"\nStarting epoch {epoch + 1}/{self.n_epochs}...")
             for iteration, data in enumerate(self.trainloader, 0):
                 print("*"+f"Starting iteration {iteration + 1}/{self.n_iteration_per_epoch}...")
-                input, target = data
+                torch.cuda.empty_cache()
+                input, target = data[0].to(self.device), data[1].to(self.device)
                 input, target_eye, target_pose_r, target_au = self.format_data(input, target)
 
-                optimizer.zero_grad()
+                ae.zero_grad()
 
                 output_eye, output_pose_r, output_au = ae(input)
 
-                loss_eye = criterionL2(output_eye, target_eye)
-                loss_pose_r = criterionL2(output_pose_r, target_pose_r)
-                loss_au = criterionL2(output_au, target_au)
+                loss_eye = criterion(output_eye, target_eye)
+                loss_pose_r = criterion(output_pose_r, target_pose_r)
+                loss_au = criterion(output_au, target_au)
 
-                loss = loss_eye + loss_pose_r + loss_au  # add weight ??
+                loss = loss_eye + loss_pose_r + loss_au
 
                 loss.backward()  # gradients are computed
                 optimizer.step() # updates the parameters, the function can be called once the gradients are computed using e.g. backward().
 
-                self.current_loss_eye += loss_eye
-                self.current_loss_pose_r += loss_pose_r
-                self.current_loss_au += loss_au
+                self.current_loss_eye += loss_eye.item()
+                self.current_loss_pose_r += loss_pose_r.item()
+                self.current_loss_au += loss_au.item()
 
-                self.current_loss += loss
+                self.current_loss += loss.item()
     
-            self.t_loss = self.test_loss(ae, self.testloader, criterionL2, criterionL2)
+            self.t_loss = self.test_loss(ae, self.testloader, criterion, criterion)
             self.update_loss_tab(iteration)
 
 

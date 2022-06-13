@@ -5,8 +5,6 @@ layer = ""
 hidden_size = 0
 first_kernel_size = 0
 kernel_size = 0
-first_padding_size = 0
-padding_size = 0
 dropout = 1
 
 # --- Path params
@@ -44,7 +42,6 @@ openface_columns = []
 
 #Model function
 model = None
-write_model = None
 train_model = None
 generate_motion = None
 

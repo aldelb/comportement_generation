@@ -8,11 +8,6 @@ from models.speech_to_AU.model import AutoEncoder
 from utils.model_utils import saveModel
 from utils.params_utils import save_params
 from utils.plot_utils import plotHistAllLossEpoch, plotHistLossEpoch
-from torch.utils.tensorboard import SummaryWriter
-
-# writer = SummaryWriter('./runs/autoencoder')
-# to visualize
-# tensorboard --logdir ./runs/autoencoder/
 
 class TrainModel12(Train):
 
@@ -20,38 +15,31 @@ class TrainModel12(Train):
         super(TrainModel12, self).__init__(gan)
 
     def test_loss(self, ae, testloader, criterion_pose, criterion_au):
-        total_loss = 0
-        for iteration, data in enumerate(testloader, 0):
-            input, target = data
-            input, target_eye, target_pose_r, target_au = self.format_data(input, target)
-            output_au = ae(input)
+        torch.cuda.empty_cache()
+        with torch.no_grad():
+            print("Calculate test loss...")
+            total_loss = 0
+            for iteration, data in enumerate(testloader, 0):
+                input, target = data[0].to(self.device), data[1].to(self.device)
+                input, target_eye, target_pose_r, target_au = self.format_data(input, target)
+                output_au = ae(input)
 
-            loss_au = criterion_au(output_au, target_au.float())
+                loss_au = criterion_au(output_au, target_au.float())
 
-            loss = loss_au
-            total_loss += loss.data
+                loss = loss_au
+                total_loss += loss.item()
 
-        total_loss = total_loss/(iteration + 1)
-        return total_loss.cpu().detach().numpy()
+            total_loss = total_loss/(iteration + 1)
+            return total_loss
 
 
     def train_model(self):
         print("Launching of model 10 : speech to head with autoencoder")
         print("Saving params...")
-        ae = AutoEncoder()
+        ae = AutoEncoder().to(self.device)
         optimizer = optim.Adam(ae.parameters(), lr=constants.g_lr)
         criterionL2 = nn.MSELoss()
         save_params(constants.saved_path, ae)
-
-        ####Tensorboard visualisation#########
-        # print("TensorBoard visualisation...")
-        # dataiter = iter(trainloader)
-        # prosodie, pose = dataiter.next()
-        # prosodie =  Variable(prosodie)
-        # prosodie = torch.reshape(prosodie, (-1, prosodie.shape[2], prosodie.shape[1]))
-        # writer.add_graph(ae, prosodie.float())
-        # writer.close()
-        #######################################
 
         print("Starting Training Loop...")
         for epoch in range(0, self.n_epochs):
@@ -60,10 +48,11 @@ class TrainModel12(Train):
             print(f"\nStarting epoch {epoch + 1}/{self.n_epochs}...")
             for iteration, data in enumerate(self.trainloader, 0):
                 print("*"+f"Starting iteration {iteration + 1}/{self.n_iteration_per_epoch}...")
-                input, target = data
+                torch.cuda.empty_cache()
+                input, target = data[0].to(self.device), data[1].to(self.device)
                 input, target_eye, target_pose_r, target_au = self.format_data(input, target)
 
-                optimizer.zero_grad()
+                ae.zero_grad()
 
                 output_au = ae(input)
 
@@ -74,11 +63,11 @@ class TrainModel12(Train):
                 loss.backward()  # gradients are computed
                 optimizer.step() # updates the parameters, the function can be called once the gradients are computed using e.g. backward().
 
-                self.current_loss += loss
+                self.current_loss += loss.item()
     
 
             self.current_loss = self.current_loss/(iteration + 1)
-            self.loss_tab.append(self.current_loss.cpu().detach().numpy())
+            self.loss_tab.append(self.current_loss)
 
             self.t_loss = self.test_loss(ae, self.testloader, criterionL2, criterionL2)
             self.t_loss_tab.append(self.t_loss)

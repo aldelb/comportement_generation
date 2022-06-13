@@ -1,10 +1,5 @@
-from pandas import DataFrame
 import torch
-import constants.constants as constants
 from models.GenerateClass import Generate
-from torch_dataset import TrainSet
-
-
 
 class GenerateModel10(Generate):
     def __init__(self):
