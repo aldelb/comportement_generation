@@ -67,7 +67,7 @@ class TrainModel5(Train):
             start_epoch = datetime.now()
             self.reinitialize_loss()
             for iteration, data in enumerate(self.trainloader, 0):
-                #print("*"+f"Starting iteration {iteration + 1}/{self.n_iteration_per_epoch}...")
+                print("*"+f"Starting iteration {iteration + 1}/{self.n_iteration_per_epoch}...")
                 torch.cuda.empty_cache()
                 # * Configure real data
                 inputs, targets = data[0].to(self.device), data[1].to(self.device)
