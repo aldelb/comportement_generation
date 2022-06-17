@@ -85,7 +85,6 @@ class TrainModel4(Train):
                 D.zero_grad()
                 real_logit = D(targets, inputs) #produce a result for each frame (tensor of length 300)
                 fake_logit = D(fake_targets.detach(), inputs.detach())
-
                 #discriminator prediction
                 self.current_real_pred += torch.mean(real_logit).item() #moy because the discriminator made a prediction for each frame
                 self.current_fake_pred += torch.mean(fake_logit).item()

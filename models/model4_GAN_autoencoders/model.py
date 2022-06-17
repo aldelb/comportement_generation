@@ -44,7 +44,7 @@ class AutoEncoder(nn.Module):
         self.down1_discr = Down(64, 128, constants.kernel_size)
         self.down2_discr = Down(128, 256, constants.kernel_size)
         self.down3_discr = Down(256, 512, constants.kernel_size)
-        self.linear = nn.Linear(15, constants.pose_size + constants.au_size)
+        self.linear = nn.Linear(15, 1)
 
 
 class Generator(AutoEncoder):
