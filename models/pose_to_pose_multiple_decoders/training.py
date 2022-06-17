@@ -80,7 +80,7 @@ class TrainModel8(Train):
             if epoch % constants.log_interval == 0 or epoch >= self.n_epochs - 1:
                 print("saving...")
                 plotHistLossEpoch(epoch, self.loss_tab, self.t_loss_tab)
-                plotHistAllLossEpoch(epoch, self.loss_tab_eye, self.loss_tab_pose_r, self.loss_tab_au, self.loss_tab)
+                plotHistAllLossEpoch(epoch, self.loss_tab_eye, self.loss_tab_pose_r, self.loss_tab_au)
                 saveModel(ae, epoch, constants.saved_path)
 
             end_epoch = datetime.now()

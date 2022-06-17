@@ -32,11 +32,11 @@ def getData(path_data_out):
 
 def create_pca(real_frames, gened_frames, path_evaluation):
     scaler = StandardScaler()
-    scaler.fit(gened_frames)
+    scaler.fit(real_frames)
     X_gened = scaler.transform(gened_frames) 
     X_real = scaler.transform(real_frames) 
 
-    mypca = PCA(n_components=2) # On paramètre ici pour ne garder que 2 axes
+    mypca = PCA(n_components=2, random_state = 1) # On paramètre ici pour ne garder que 2 axes
     mypca.fit(X_real)
 
     print(mypca.singular_values_) # Valeurs de variance
@@ -59,14 +59,18 @@ def create_pca(real_frames, gened_frames, path_evaluation):
     plt.savefig(path_evaluation + 'pca.png')
     plt.close()
     
-def calculate_kde(real_frames, gened_frames, path_evaluation):
-    params = {'bandwidth':  np.logspace(-2, 0, 5)}
-    print("Grid search for bandwith parameter of Kernel Density...")
-    grid = GridSearchCV(KernelDensity(kernel='gaussian'), params, cv=3)
-    grid.fit(gened_frames)
+def calculate_kde(real_frames, gened_frames, path_evaluation, bandwidth = None):
+    if(bandwidth == None):
+        params = {'bandwidth':  np.logspace(-2, 0, 5)}
+        print("Grid search for bandwith parameter of Kernel Density...")
+        grid = GridSearchCV(KernelDensity(kernel='gaussian'), params, cv=3)
+        grid.fit(gened_frames)
+        print("best bandwidth: {0}".format(grid.best_estimator_.bandwidth))
+        scores = grid.best_estimator_.score_samples(real_frames)
 
-    print("best bandwidth: {0}".format(grid.best_estimator_.bandwidth))
-    scores = grid.best_estimator_.score_samples(real_frames)
+    else:
+        kde = KernelDensity(kernel='gaussian', bandwidth = float(bandwidth)).fit(gened_frames)
+        scores = kde.score_samples(real_frames)
 
     mean = np.mean(scores)
     sd = np.std(scores)
@@ -82,8 +86,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-params', help='Path to the constant file', default="./params.cfg")
     parser.add_argument('-epoch', help='number of epoch of recovred model', default=9)
+    parser.add_argument('-bandwidth', help= "bandwith in known", default=None)
     args = parser.parse_args()
-    read_params(args.params)
+    read_params(args.params, "eval")
 
     model_file = find_model(int(args.epoch)) 
 
@@ -100,5 +105,5 @@ if __name__ == "__main__":
     print("create pca...")
     create_pca(real_frames, gened_frames, path_evaluation)
     print("calculate kde...")
-    calculate_kde(real_frames, gened_frames, path_evaluation)
+    calculate_kde(real_frames, gened_frames, path_evaluation, args.bandwidth)
     

@@ -157,13 +157,14 @@ class TrainModel4(Train):
 
             print('[ %d ] loss : %.4f %.4f' % (epoch+1, self.current_loss, self.t_loss))
             print('[ %d ] pred : %.4f %.4f' % (epoch+1, self.current_real_pred, self.current_fake_pred))
+            print('adv : %.4f; loss_eye : %.4f; loss r : %.4f; loss au : %.4f' % (adversarial_loss, loss_eye, loss_pose_r, loss_au))
 
             if epoch % constants.log_interval == 0 or epoch >= self.n_epochs - 1:
                 print("saving...")
                 saveModel(G, epoch, constants.saved_path)
                 plotHistLossEpochGAN(epoch, self.d_loss_tab, self.loss_tab, self.t_loss_tab)
                 plotHistPredEpochGAN(epoch, self.d_real_pred_tab, self.d_fake_pred_tab)
-                plotHistAllLossEpoch(epoch, self.loss_tab_eye, self.loss_tab_pose_r, self.loss_tab_au, self.loss_tab)
+                plotHistAllLossEpoch(epoch, self.loss_tab_eye, self.loss_tab_pose_r, self.loss_tab_au)
 
             end_epoch = datetime.now()   
             diff = end_epoch - start_epoch

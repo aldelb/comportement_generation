@@ -15,13 +15,12 @@ def plotHistLossEpoch(num_epoch, loss, t_loss=None):
     plt.savefig(constants.saved_path+f'loss_epoch_{num_epoch}.png')
     plt.close()
 
-def plotHistAllLossEpoch(num_epoch, loss_eye, loss_pose_r, loss_au, loss):
+def plotHistAllLossEpoch(num_epoch, loss_eye, loss_pose_r, loss_au):
     fig = plt.figure(dpi=100)
     ax1 = fig.add_subplot(1, 1, 1)
     ax1.plot(range(num_epoch+1), loss_eye, label='loss gaze')
     ax1.plot(range(num_epoch+1), loss_pose_r, label='loss pose r')
     ax1.plot(range(num_epoch+1), loss_au, label='loss AU')
-    ax1.plot(range(num_epoch+1), loss, label='loss')
     ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Loss")

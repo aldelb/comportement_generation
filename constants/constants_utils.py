@@ -5,7 +5,7 @@ from datetime import date
 
 config = configparser.RawConfigParser()
 
-def read_params(file, task="train", id=None):
+def read_params(file, task, id=None):
 
     config.read(file)
 
